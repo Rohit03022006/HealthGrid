@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaHospitalUser, FaListOl, FaSignOutAlt } from "react-icons/fa";
+import { FaHospitalUser, FaListOl  } from "react-icons/fa";
 
 import PatientSearchBar from "@/components/receptionist/PatientSearchBar";
 import PatientRegForm from "@/components/receptionist/PatientRegForm";
@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FiLogOut } from "react-icons/fi";
 
 const ReceptionistPage = () => {
   const { logout } = useAuth();
@@ -80,7 +81,7 @@ const ReceptionistPage = () => {
               onClick={logout}
               className="h-11 w-full gap-2 px-5 text-base font-semibold sm:w-auto"
             >
-              <FaSignOutAlt className="h-4 w-4" />
+              <FiLogOut className="h-5 w-5" />
               Logout
             </Button>
           </div>

@@ -5,6 +5,7 @@ import {
   updateTokenStatusService,
 } from "./token.service.js";
 import { successResponse, errorResponse } from "../../utils/apiResponse.js";
+import { ROLES, TOKEN_STATUS } from "../../lib/constants.js";
 
 export const assignToken = async (req, res) => {
   const { patientId, reason, doctorId, offlineUuid } = req.body;
@@ -32,7 +33,7 @@ export const assignToken = async (req, res) => {
 
 export const getQueueToday = async (req, res) => {
   // Doctor sirf apni queue dekhe
-  const doctorId = req.user.role === "DOCTOR" ? req.user.id : null;
+  const doctorId = req.user.role === ROLES.DOCTOR ? req.user.id : null;
   const result = await getQueueTodayService(doctorId);
   return successResponse(res, 200, "Today Queue fetched", result);
 };
@@ -51,7 +52,11 @@ export const getTokenById = async (req, res) => {
 export const updateTokenStatus = async (req, res) => {
   const { status } = req.body;
 
-  const VALID = ["IN_PROGRESS", "COMPLETED", "CANCELLED"];
+  const VALID = [
+    TOKEN_STATUS.IN_PROGRESS,
+    TOKEN_STATUS.COMPLETED,
+    TOKEN_STATUS.CANCELLED,
+  ];
   if (!VALID.includes(status)) {
     return errorResponse(res, 400, "Invalid status");
   }

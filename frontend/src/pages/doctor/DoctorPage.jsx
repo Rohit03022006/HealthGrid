@@ -14,6 +14,7 @@ import PrescriptionForm from "@/components/doctor/PrescriptionForm";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import SyncStatusBadge from "@/components/common/SyncStatusBadge";
 
 const DoctorPage = () => {
   const navigate = useNavigate();
@@ -51,18 +52,21 @@ const DoctorPage = () => {
             </h1>
 
             <p className="max-w-2xl text-sm text-muted-foreground">
-              Call patients, view history, write prescriptions, and generate PDF.
+              Call patients, view history, write prescriptions, and generate
+              PDF.
             </p>
           </div>
-
-          <Button
-            variant="destructive"
-            onClick={handleLogout}
-            className="h-11 w-full gap-2 px-5 text-base sm:w-auto"
-          >
-            <FiLogOut className="h-5 w-5" />
-            Logout
-          </Button>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+             <SyncStatusBadge />
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              className="h-11 w-full gap-2 px-5 text-base sm:w-auto"
+            >
+              <FiLogOut className="h-5 w-5" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {completed && (

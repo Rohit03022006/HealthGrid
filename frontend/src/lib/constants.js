@@ -1,0 +1,237 @@
+// User Roles
+export const ROLES = {
+  RECEPTIONIST: "RECEPTIONIST",
+  DOCTOR: "DOCTOR",
+  ADMIN: "ADMIN",
+};
+
+//  Token Status
+export const TOKEN_STATUS = {
+  WAITING: "WAITING",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
+};
+
+// Status jo queue se remove ho jayein
+export const REMOVE_FROM_QUEUE = [
+  TOKEN_STATUS.COMPLETED,
+  TOKEN_STATUS.CANCELLED,
+];
+
+//  Token Priority
+export const PRIORITY = {
+  URGENT: 1,
+  HIGH: 2,
+  NORMAL: 3,
+};
+
+export const PRIORITY_LABELS = {
+  1: "URGENT",
+  2: "HIGH",
+  3: "NORMAL",
+};
+
+export const PRIORITY_MAP = {
+  // Priority 1  - Immediate
+  "chest pain": PRIORITY.URGENT,
+  "breathing problem": PRIORITY.URGENT,
+  unconscious: PRIORITY.URGENT,
+  "heart attack": PRIORITY.URGENT,
+  stroke: PRIORITY.URGENT,
+
+  // Priority 2  - Urgent
+  "high fever": PRIORITY.HIGH,
+  "severe pain": PRIORITY.HIGH,
+  accident: PRIORITY.HIGH,
+  "head injury": PRIORITY.HIGH,
+  vomiting: PRIORITY.HIGH,
+
+  // Priority 3  - Normal (default)
+  "routine checkup": PRIORITY.NORMAL,
+  "follow up": PRIORITY.NORMAL,
+  general: PRIORITY.NORMAL,
+  cold: PRIORITY.NORMAL,
+  cough: PRIORITY.NORMAL,
+};
+
+// Medicine Frequency
+export const FREQUENCY_OPTIONS = [
+  { value: "1-0-0", label: "1-0-0  (Morning only)" },
+  { value: "0-0-1", label: "0-0-1  (Night only)" },
+  { value: "1-0-1", label: "1-0-1  (Morning + Night)" },
+  { value: "1-1-1", label: "1-1-1  (Three times)" },
+  { value: "SOS", label: "SOS    (When needed)" },
+  { value: "TDS", label: "TDS    (Three times daily)" },
+  { value: "BD", label: "BD     (Twice daily)" },
+];
+
+export const FREQUENCY_VALUES = FREQUENCY_OPTIONS.map((f) => f.value);
+
+//  Gender
+export const GENDER_OPTIONS = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "OTHER", label: "Other" },
+];
+
+export const GENDER_VALUES = GENDER_OPTIONS.map((g) => g.value);
+
+// Analytics
+export const ANALYTICS_DAYS_OPTIONS = [
+  { value: 7, label: "Last 7 days" },
+  { value: 30, label: "Last 30 days" },
+  { value: 90, label: "Last 90 days" },
+];
+
+//  Pagination
+export const PAGINATION = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 100,
+};
+
+//  Offline Sync
+export const SYNC_TYPES = {
+  PATIENT: "PATIENT",
+  TOKEN: "TOKEN",
+};
+
+//  API
+export const API_TIMEOUT = 10000; // 10 seconds
+
+//   Heatmap
+export const HEATMAP_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+export const HEATMAP_HOURS = Array.from(
+  { length: 12 },
+  (_, i) => i + 8, // 8am to 7pm
+);
+
+//   Drug Warnings
+export const DANGEROUS_COMBOS = [
+  {
+    drugs: ["Warfarin", "Aspirin"],
+    warning: "Increased bleeding risk",
+  },
+  {
+    drugs: ["Metformin", "Alcohol"],
+    warning: "Risk of lactic acidosis",
+  },
+  {
+    drugs: ["Ciprofloxacin", "Antacid"],
+    warning: "Reduced antibiotic absorption",
+  },
+];
+
+//   Routes
+export const ROLE_ROUTES = {
+  [ROLES.RECEPTIONIST]: "/receptionist",
+  [ROLES.DOCTOR]: "/doctor",
+  [ROLES.ADMIN]: "/admin",
+};
+
+//  IndexedDB
+export const DB_NAME = "HealthGridDB";
+export const DB_VERSION = 1;
+
+//  PDF
+export const PDF_CONFIG = {
+  FORMAT: "a5",
+  MARGIN: 10,
+  FONT: "helvetica",
+};
+
+export const PDF_LAYOUT = {
+  PAGE_WIDTH: 148,
+  PAGE_HEIGHT: 210,
+  HEADER_HEIGHT: 28,
+  FOOTER_HEIGHT: 12,
+  CONTENT_TOP: 34,
+  CONTENT_BOTTOM_PADDING: 6,
+};
+
+export const PDF_FONTS = {
+  TITLE: 15,
+  HEADER_META: 9,
+  SECTION_TITLE: 8,
+  PATIENT_LABEL: 8,
+  PATIENT_VALUE: 8.5,
+  RX_LABEL: 9,
+  TABLE_HEADER: 7.5,
+  TABLE_BODY: 8,
+  NOTE: 7,
+  FOOTER: 7,
+};
+
+export const PDF_SPACING = {
+  HEADER_LINE_WIDTH: 0.4,
+  HEADER_TITLE_Y: 10,
+  HEADER_META_Y: 17,
+  HEADER_DATE_OFFSET_X: 44,
+  PATIENT_BOX_HEIGHT: 32,
+  PATIENT_LEFT_X_OFFSET: 3,
+  PATIENT_RIGHT_X_OFFSET: 63,
+  PATIENT_ROW_1_Y_OFFSET: 12,
+  PATIENT_ROW_2_Y_OFFSET: 18,
+  PATIENT_ROW_3_Y_OFFSET: 24,
+  SECTION_TITLE_GAP: 5,
+  SECTION_BODY_LINE_HEIGHT: 4.2,
+  SECTION_BODY_LINE_HEIGHT_COMPRESSED: 4,
+  SECTION_BLOCK_GAP: 4,
+  SECTION_BREAK_BUFFER: 18,
+  RX_HEADER_HEIGHT: 8,
+  RX_HEADER_GAP: 10,
+  TABLE_HEADER_GAP: 4,
+  TABLE_HEADER_RULE_OFFSET: 2,
+  TABLE_ROW_ALT_HEIGHT: 8,
+  TABLE_ROW_LINE_HEIGHT: 3.8,
+  TABLE_NOTE_LINE_HEIGHT: 3.6,
+  TABLE_NOTE_TOP_PADDING: 3,
+  TABLE_NOTE_LEFT_PADDING: 2,
+  TABLE_NOTE_BOTTOM_PADDING: 3,
+  TABLE_ROW_MIN_HEIGHT: 9,
+  CONTENT_SECTION_GAP: 10,
+  FOLLOWUP_BREAK_BUFFER: 10,
+  FOOTER_Y_OFFSET: 5,
+  FOOTER_HEIGHT: 12,
+  FOOTER_FONT_SIZE: 7,
+};
+
+export const PDF_IMAGE = {
+  WATERMARK_WIDTH: 50,
+  WATERMARK_HEIGHT: 50,
+  WATERMARK_OPACITY: 0.08,
+};
+
+export const PDF_TABLE = {
+  HEADER_WIDTHS: {
+    NAME: 48,
+    DOSAGE: 28,
+    FREQUENCY: 24,
+    DURATION: 28,
+  },
+  ROW_WIDTHS: {
+    NAME: 50,
+    DOSAGE: 18,
+    FREQUENCY: 26,
+    DURATION: 26,
+    NOTE_PADDING: 8,
+  },
+};
+
+export const PDF_BRAND = {
+  CLINIC_NAME: "HealthGrid OPD",
+  FOOTER_TEXT: "Generated by HealthGrid OPD Management System",
+  LOGO_PATH: "/logo.png",
+};
+
+export const PDF_COLORS = {
+  BLACK: [0, 0, 0],
+  TEAL: [0, 163, 163],
+  DARK: [15, 23, 42],
+  GRAY: [100, 116, 139],
+  WHITE: [255, 255, 255],
+  LIGHT: [241, 245, 249],
+  BORDER: [203, 213, 225],
+};

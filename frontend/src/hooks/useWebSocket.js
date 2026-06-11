@@ -1,21 +1,31 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import { getToken } from "@/lib/auth";
-import { useAuth } from "./useAuth";
+import { useAuthStore } from "@/store/authStore";
+import { useQueueStore } from "@/store/queueStore";
+import { ROLES } from "@/lib/constants";
 
-let socketInstance = null; // Single instance — prevent multiple connections
+let socketInstance = null; // Single socket instance
 
 export const useWebSocket = () => {
-  const { user } = useAuth();
-  const [connected, setConnected] = useState(false);
-  const [queue, setQueue] = useState([]);
+  const user = useAuthStore((state) => state.user);
+
+  const addToken = useQueueStore((state) => state.addToken);
+  const updateTokenStatus = useQueueStore((state) => state.updateTokenStatus);
+  const removeToken = useQueueStore((state) => state.removeToken);
+  const setConnected = useQueueStore((state) => state.setConnected);
+
   const listenersRef = useRef({});
 
-  // Connect
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      socketInstance?.disconnect();
+      socketInstance = null;
+      setConnected(false);
+      return;
+    }
 
-    // Already connected hai?
+    // Agar already connected hai to dobara connection mat banao
     if (socketInstance?.connected) {
       setConnected(true);
       return;
@@ -24,23 +34,29 @@ export const useWebSocket = () => {
     socketInstance = io(
       import.meta.env.VITE_SOCKET_URL || "http://localhost:5000",
       {
-        auth: { token: getToken() },
+        auth: {
+          token: getToken(),
+        },
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionAttempts: 5,
       },
     );
 
-    // Connection events
     socketInstance.on("connect", () => {
-      console.log("Socket connected");
+      console.log("Socket connected:", socketInstance.id);
       setConnected(true);
 
-      // Role ke hisaab se room join karo
-      if (user.role === "DOCTOR") {
+      if (user.role === ROLES.DOCTOR) {
         socketInstance.emit("join:doctor", user.id);
-      } else if (user.role === "RECEPTIONIST") {
+      }
+
+      if (user.role === ROLES.RECEPTIONIST) {
         socketInstance.emit("join:receptionist");
+      }
+
+      if (user.role === ROLES.ADMIN) {
+        socketInstance.emit("join:admin");
       }
     });
 
@@ -49,64 +65,56 @@ export const useWebSocket = () => {
       setConnected(false);
     });
 
-    //  Queue Events
+    socketInstance.on("connect_error", (error) => {
+      console.error("Socket connection error:", error.message);
+      setConnected(false);
+    });
 
-    // Naya token aaya
+    // New token
     socketInstance.on("queue:new_token", (token) => {
-      setQueue((prev) => {
-        // Already exist karta hai? Skip
-        if (prev.find((t) => t.id === token.id)) return prev;
-
-        // Priority order mein insert karo
-        const updated = [...prev, token].sort((a, b) => {
-          if (a.priority !== b.priority) return a.priority - b.priority;
-          return new Date(a.issued_at) - new Date(b.issued_at);
-        });
-
-        return updated;
-      });
-
-      // Custom listener fire karo
+      addToken(token);
       listenersRef.current["queue:new_token"]?.(token);
     });
 
     // Status update
     socketInstance.on("queue:status_update", ({ tokenId, status }) => {
-      setQueue((prev) =>
-        prev
-          .map((t) => (t.id === tokenId ? { ...t, status } : t))
-          .filter((t) => !["COMPLETED", "CANCELLED"].includes(t.status)),
-      );
-
+      updateTokenStatus(tokenId, status);
       listenersRef.current["queue:status_update"]?.({ tokenId, status });
     });
 
-    // Token complete — queue se remove
+    // Token completed
     socketInstance.on("queue:token_completed", ({ tokenId }) => {
-      setQueue((prev) => prev.filter((t) => t.id !== tokenId));
+      removeToken(tokenId);
       listenersRef.current["queue:token_completed"]?.({ tokenId });
     });
 
     return () => {
-      socketInstance?.disconnect();
-      socketInstance = null;
-    };
-  }, [user]);
+      if (socketInstance) {
+        socketInstance.off("connect");
+        socketInstance.off("disconnect");
+        socketInstance.off("connect_error");
 
-  //  Custom Event Listener
+        socketInstance.off("queue:new_token");
+        socketInstance.off("queue:status_update");
+        socketInstance.off("queue:token_completed");
+
+        socketInstance.disconnect();
+        socketInstance = null;
+      }
+
+      setConnected(false);
+    };
+  }, [user, addToken, updateTokenStatus, removeToken, setConnected]);
+
   const on = useCallback((event, callback) => {
     listenersRef.current[event] = callback;
   }, []);
 
-  //  Remove Listener
   const off = useCallback((event) => {
     delete listenersRef.current[event];
   }, []);
 
   return {
-    connected,
-    queue,
-    setQueue,
     on,
     off,
     socket: socketInstance,

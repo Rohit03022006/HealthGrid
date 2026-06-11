@@ -7,11 +7,12 @@ import {
 } from "./analytics.controller.js";
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
+import { ROLES } from "../../lib/constants.js";
 
 const router = Router();
 
 router.use(authMiddleware);
-router.use(requireRole("ADMIN"));
+router.use(requireRole(ROLES.ADMIN));
 
 router.get("/dashboard",  getDashboardStats);
 router.get("/doctor-load", getDoctorLoad);

@@ -1,4 +1,5 @@
 import { errorResponse } from "../utils/apiResponse.js";
+import { ROLES } from "../lib/constants.js";
 
 export const requireRole = (...roles) => {
   return (req, res, next) => {

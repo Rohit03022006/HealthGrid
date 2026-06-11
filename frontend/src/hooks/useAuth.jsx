@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         const res = await getMeAPI();
         setUser(res.data);
       } catch {
-        // Token invalid — logout
+        // Token invalid  - logout
         logout();
         setUser(null);
       } finally {

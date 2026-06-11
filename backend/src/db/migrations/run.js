@@ -32,7 +32,7 @@ const runMigrations = async () => {
       );
 
       if (rows.length > 0) {
-        console.log(`Skipping ${file} — already ran`);
+        console.log(`Skipping ${file}  - already ran`);
         continue;
       }
 

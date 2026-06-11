@@ -45,7 +45,7 @@ export const createPrescription = async (req, res) => {
       return errorResponse(
         res,
         400,
-        "Token is not active — call patient first",
+        "Token is not active  - call patient first",
       );
     if (err.message === "MEDICINES_REQUIRED")
       return errorResponse(res, 400, "Medicines required");

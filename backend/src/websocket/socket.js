@@ -1,5 +1,6 @@
 
 import { Server } from "socket.io";
+import { SOCKET_ROOMS } from "../lib/constants.js";
 
 let io;
 
@@ -16,13 +17,13 @@ export const initSocket = (httpServer) => {
 
     // Doctor apne room mein join kare
     socket.on("join:doctor", (doctorId) => {
-      socket.join(`doctor:${doctorId}`);
+      socket.join(`${SOCKET_ROOMS.DOCTOR_PREFIX}${doctorId}`);
       console.log(`Doctor ${doctorId} joined room`);
     });
 
     // Receptionist room
     socket.on("join:receptionist", () => {
-      socket.join("receptionist");
+      socket.join(SOCKET_ROOMS.RECEPTIONIST);
       console.log(`Receptionist joined room`);
     });
 

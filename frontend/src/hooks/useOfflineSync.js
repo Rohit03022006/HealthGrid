@@ -1,86 +1,140 @@
-import { useState, useEffect, useCallback } from "react";
+// src/hooks/useOfflineSync.js
+import { useState, useEffect, useCallback, useRef } from "react";
 import { db } from "@/lib/db";
 import { assignTokenAPI } from "@/services/tokenService";
 import { registerPatientAPI } from "@/services/patientService";
 
 export const useOfflineSync = () => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [pending, setPending] = useState(0);
   const [syncing, setSyncing] = useState(false);
 
-  // Online/offline detect karo
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+  const syncingRef = useRef(false);
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+  const updatePendingCount = useCallback(async () => {
+    try {
+      const count = await db.pendingSync.count();
 
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
+      setPending((prev) => {
+        return prev === count ? prev : count;
+      });
+    } catch (err) {
+      console.error("Pending count failed:", err);
+
+      setPending((prev) => {
+        return prev === 0 ? prev : 0;
+      });
+    }
   }, []);
 
-  // Pending count update karo
-  useEffect(() => {
-    const updateCount = async () => {
-      const count = await db.pendingSync.count();
-      setPending(count);
-    };
-    updateCount();
-  }, [isOnline]);
+  const syncPending = useCallback(async () => {
+    if (!navigator.onLine) return;
+    if (syncingRef.current) return;
 
-  // Save Offline
+    syncingRef.current = true;
+    setSyncing(true);
+
+    try {
+      const items = await db.pendingSync.orderBy("createdAt").toArray();
+
+      for (const item of items) {
+        try {
+          if (!navigator.onLine) break;
+
+          if (item.type === "PATIENT") {
+            await registerPatientAPI(item.data);
+          }
+
+          if (item.type === "TOKEN") {
+            await assignTokenAPI({
+              ...item.data,
+              offlineUuid: item.offlineUuid,
+            });
+          }
+
+          await db.pendingSync.delete(item.id);
+        } catch (err) {
+          if (err?.message === "ALREADY_SYNCED") {
+            await db.pendingSync.delete(item.id);
+          } else {
+            console.error("Sync failed for item:", item.id, err);
+            break;
+          }
+        }
+      }
+
+      await updatePendingCount();
+    } finally {
+      syncingRef.current = false;
+      setSyncing(false);
+    }
+  }, [updatePendingCount]);
+
   const saveOffline = useCallback(async (type, data) => {
-    await db.pendingSync.add({
-      type, // "PATIENT" | "TOKEN"
+    const dedupeKey =
+      data?.offlineUuid ||
+      data?.id ||
+      data?.patientId ||
+      `${type}-${JSON.stringify(data)}`;
+
+    const existing = await db.pendingSync
+      .where("dedupeKey")
+      .equals(dedupeKey)
+      .first()
+      .catch(() => null);
+
+    if (existing) {
+      await updatePendingCount();
+      return existing.id;
+    }
+
+    const id = await db.pendingSync.add({
+      type,
       data,
+      dedupeKey,
       createdAt: new Date().toISOString(),
       offlineUuid: crypto.randomUUID(),
     });
 
-    setPending((prev) => prev + 1);
-  }, []);
+    await updatePendingCount();
 
-  // Sync Pending
-  const syncPending = useCallback(async () => {
-    if (!isOnline || syncing) return;
+    return id;
+  }, [updatePendingCount]);
 
-    setSyncing(true);
-
-    const items = await db.pendingSync.toArray();
-
-    for (const item of items) {
-      try {
-        if (item.type === "PATIENT") {
-          await registerPatientAPI(item.data);
-        } else if (item.type === "TOKEN") {
-          await assignTokenAPI({
-            ...item.data,
-            offlineUuid: item.offlineUuid,
-          });
-        }
-
-        // Sync hua — delete karo
-        await db.pendingSync.delete(item.id);
-        setPending((prev) => Math.max(0, prev - 1));
-      } catch (err) {
-        // Already synced — delete karo
-        if (err.message === "ALREADY_SYNCED") {
-          await db.pendingSync.delete(item.id);
-        }
-        console.error("Sync failed for item:", item.id, err.message);
-      }
-    }
-
-    setSyncing(false);
-  }, [isOnline, syncing]);
-
-  // Online aate hi sync karo
   useEffect(() => {
-    if (isOnline) syncPending();
-  }, [isOnline]);
+    let mounted = true;
+
+    const setOnlineSafely = (value) => {
+      if (!mounted) return;
+
+      setIsOnline((prev) => {
+        return prev === value ? prev : value;
+      });
+    };
+
+    const handleOnline = () => {
+      setOnlineSafely(true);
+      console.log("🟢 Back online — syncing...");
+      syncPending();
+    };
+
+    const handleOffline = () => {
+      setOnlineSafely(false);
+      console.log("🔴 Gone offline — saving locally");
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    updatePendingCount();
+
+    return () => {
+      mounted = false;
+
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [syncPending, updatePendingCount]);
 
   return {
     isOnline,

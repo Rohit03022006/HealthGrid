@@ -1,6 +1,7 @@
 import logo from "@/assets/logo.png";
+import { Button } from "@/components/ui/button";
 
-const Footer = () => {
+const Footer = ({ canInstall, installed, install }) => {
   return (
     <footer className="border-t">
       <div className="container mx-auto px-6 py-10">
@@ -20,6 +21,20 @@ const Footer = () => {
           <p className="mt-2 text-sm text-muted-foreground">
             Modern OPD Management System
           </p>
+
+          <div className="mt-5">
+            {canInstall && (
+              <Button variant="outline" onClick={install}>
+                Install App
+              </Button>
+            )}
+
+            {installed && (
+              <Button variant="outline" disabled>
+                App Installed
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </footer>

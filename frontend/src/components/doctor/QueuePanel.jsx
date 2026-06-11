@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { useQueueStore } from "@/store/queueStore";
 import {
   getQueueTodayAPI,
   updateTokenStatusAPI,
@@ -21,7 +22,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 const QueuePanel = ({ activeTokenId, onCallPatient }) => {
-  const { queue, setQueue, connected } = useWebSocket();
+  useWebSocket();
+  const queue = useQueueStore((state) => state.queue) ?? [];
+  const setQueue = useQueueStore((state) => state.setQueue);
+  const connected = useQueueStore((state) => state.connected);
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState(null);
 
@@ -158,7 +162,7 @@ const QueuePanel = ({ activeTokenId, onCallPatient }) => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Token</p>
-                      <p className="break-words text-3xl font-black leading-tight tracking-wide text-primary">
+                      <p className="wrap-break-word text-3xl font-black leading-tight tracking-wide text-primary">
                         {token.token_display}
                       </p>
                     </div>

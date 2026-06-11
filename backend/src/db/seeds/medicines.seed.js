@@ -53,7 +53,7 @@ const seedMedicines = async () => {
     console.log(`${records.length} active medicines found`);
     console.log("Inserting into PostgreSQL...`");
 
-    // Batch insert — 1000 at a time (fast)
+    // Batch insert  - 1000 at a time (fast)
     const BATCH_SIZE = 1000;
 
     for (let i = 0; i < records.length; i += BATCH_SIZE) {

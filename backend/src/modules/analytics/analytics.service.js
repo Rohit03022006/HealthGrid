@@ -4,7 +4,7 @@ import pool from "../../config/db.js";
 export const getDashboardStatsService = async (date) => {
   const targetDate = date || new Date().toISOString().split("T")[0];
 
-  // Sab queries parallel chalao — fast!
+  // Sab queries parallel chalao  - fast!
   const [todayResult, avgTimeResult, completedResult, waitingResult] =
     await Promise.all([
 

@@ -1,4 +1,5 @@
 import pool from "../../config/db.js";
+import { TOKEN_STATUS } from "../../lib/constants.js";
 
 export const getQueueStatusService = async (tokenDisplay) => {
   const { rows } = await pool.query(
@@ -23,7 +24,7 @@ export const getQueueStatusService = async (tokenDisplay) => {
     throw new Error("TOKEN_NOT_FOUND");
   }
 
-  if (token.status === "COMPLETED" || token.status === "CANCELLED") {
+  if (token.status === TOKEN_STATUS.COMPLETED || token.status === TOKEN_STATUS.CANCELLED) {
     return {
       token: token.token_display,
       status: token.status,
@@ -37,10 +38,10 @@ export const getQueueStatusService = async (tokenDisplay) => {
     SELECT COUNT(*) AS count
     FROM tokens
     WHERE token_number < $1
-      AND status = 'WAITING'
+      AND status = $2
       AND DATE(issued_at) = CURRENT_DATE
     `,
-    [token.token_number],
+    [token.token_number, TOKEN_STATUS.WAITING],
   );
 
   const patientsAhead = Number(aheadRows[0].count);

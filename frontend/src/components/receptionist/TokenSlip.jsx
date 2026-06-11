@@ -306,7 +306,7 @@ Current Status: ${currentStatus}
                   ) : (
                     <p className="flex items-center justify-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
                       <FaQrcode />
-                      Offline — QR will be available after sync
+                      Offline  - QR will be available after sync
                     </p>
                   )}
                 </div>

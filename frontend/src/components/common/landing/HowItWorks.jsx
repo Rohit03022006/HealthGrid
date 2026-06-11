@@ -5,43 +5,32 @@ import {
   FaFilePrescription,
 } from "react-icons/fa";
 
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 const steps = [
   {
     icon: FaUserPlus,
     title: "Register Patient",
-    description:
-      "Receptionist registers the patient and generates a token.",
+    description: "Receptionist registers the patient and generates a token.",
   },
   {
     icon: FaClipboardList,
     title: "Manage Queue",
-    description:
-      "Doctor sees the live queue and calls the next patient.",
+    description: "Doctor sees the live queue and calls the next patient.",
   },
   {
     icon: FaFilePrescription,
     title: "Digital Prescription",
-    description:
-      "Doctor writes prescriptions digitally and stores records.",
+    description: "Doctor writes prescriptions digitally and stores records.",
   },
 ];
 
 const HowItWorks = () => {
   return (
-    <section
-      id="workflow"
-      className="bg-muted/30 py-24"
-    >
+    <section id="workflow" className="bg-muted/30 py-24">
       <div className="container mx-auto px-6">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold">
-            How It Works
-          </h2>
+          <h2 className="mb-4 text-4xl font-bold">How It Works</h2>
 
           <p className="text-muted-foreground">
             A simple workflow from registration to consultation.
@@ -78,13 +67,9 @@ const HowItWorks = () => {
                       </div>
                     </div>
 
-                    <h3 className="mb-3 text-xl font-semibold">
-                      {step.title}
-                    </h3>
+                    <h3 className="mb-3 text-xl font-semibold">{step.title}</h3>
 
-                    <p className="text-muted-foreground">
-                      {step.description}
-                    </p>
+                    <p className="text-muted-foreground">{step.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>

@@ -3,7 +3,7 @@ import { useOfflineSync } from "@/hooks/useOfflineSync";
 const SyncStatusBadge = () => {
   const { isOnline, pending, syncing } = useOfflineSync();
 
-  // ─── States ───────────────────────────────────────────────────
+  // ─── States  
   // 1. Online + no pending
   // 2. Online + syncing
   // 3. Online + pending (should not happen long)
@@ -32,7 +32,7 @@ const SyncStatusBadge = () => {
       dot:   "🟡",
     },
     OFFLINE_PENDING: {
-      label: `Offline — ${pending} pending`,
+      label: `Offline  - ${pending} pending`,
       dot:   "🔴",
     },
     OFFLINE: {

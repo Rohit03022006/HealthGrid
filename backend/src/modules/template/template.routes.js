@@ -8,11 +8,12 @@ import {
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
+import { ROLES } from "../../lib/constants.js";
 
 const router = Router();
 
 router.use(authMiddleware);
-router.use(requireRole("DOCTOR")); // Sirf doctor
+router.use(requireRole(ROLES.DOCTOR)); // Sirf doctor
 
 router.get("/", getMyTemplates);
 router.post("/", validate("createTemplate"), createTemplate);

@@ -232,7 +232,7 @@ const PatientRegForm = ({ onRegistered, onCancel, prefillPhone = "" }) => {
               className="flex w-fit items-center gap-2 whitespace-normal rounded-lg px-3 py-2 text-left text-xs font-normal text-muted-foreground"
             >
               <FaWifi className="shrink-0 text-primary" />
-              <span>Offline — will sync when internet returns</span>
+              <span>Offline  - will sync when internet returns</span>
             </Badge>
           )}
 

@@ -7,6 +7,7 @@ import {
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
+import { ROLES } from "../../lib/constants.js";
 
 const router = Router();
 
@@ -16,21 +17,21 @@ router.use(authMiddleware);
 router.post(
   "/",
   validate("createPrescription"),
-  requireRole("DOCTOR"),
+  requireRole(ROLES.DOCTOR),
   createPrescription,
 );
 
 // Visit ke liye prescription
 router.get(
   "/visit/:visitId",
-  requireRole("DOCTOR", "RECEPTIONIST"),
+  requireRole(ROLES.DOCTOR, ROLES.RECEPTIONIST),
   getPrescriptionByVisit,
 );
 
 // Patient ki poori history
 router.get(
   "/patient/:patientId",
-  requireRole("DOCTOR"),
+  requireRole(ROLES.DOCTOR),
   getPrescriptionsByPatient,
 );
 

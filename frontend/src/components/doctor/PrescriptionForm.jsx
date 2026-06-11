@@ -6,6 +6,7 @@ import {
   FaPills,
   FaPlus,
   FaSave,
+  FaPrint,
   FaSearch,
   FaTrash,
 } from "react-icons/fa";
@@ -14,6 +15,7 @@ import { createPrescriptionAPI } from "@/services/prescriptionService";
 import { getTemplatesAPI } from "@/services/templateService";
 import { useMedicineSearch } from "@/hooks/useMedicineSearch";
 import { usePrescriptionPDF } from "@/hooks/usePrescriptionPDF";
+import { useAuth } from "@/hooks/useAuth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +44,7 @@ const EMPTY_MEDICINE = {
 };
 
 const PrescriptionForm = ({ token, onDone }) => {
+  const { user } = useAuth();
   const [form, setForm] = useState({
     chiefComplaint: "",
     diagnosis: "",
@@ -56,7 +59,21 @@ const PrescriptionForm = ({ token, onDone }) => {
   const [activeSearch, setActiveSearch] = useState(null);
 
   const { results, search, clear } = useMedicineSearch();
-  const { downloadPDF } = usePrescriptionPDF();
+  const { downloadPDF, printPDF } = usePrescriptionPDF();
+
+  const tokenPatient = token?.patient || {};
+  const patientName =
+    token?.patient_name || token?.patientName || tokenPatient.name || token.name || "";
+  const patientAge =
+    token?.patient_age || token?.patientAge || tokenPatient.age || "";
+  const patientGender =
+    token?.patient_gender || token?.patientGender || tokenPatient.gender || "";
+  const patientCode =
+    token?.patient_code || token?.patientCode || tokenPatient.patient_code || tokenPatient.code || "";
+  const patientPhone =
+    token?.patient_phone || token?.patientPhone || tokenPatient.phone || tokenPatient.mobile || "";
+  const doctorName =
+    token?.doctor_name || token?.doctorName || user?.name || user?.fullName || "";
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -151,8 +168,7 @@ const PrescriptionForm = ({ token, onDone }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const submitAndRender = async ({ printAfterSave = false } = {}) => {
     if (!validate()) return;
 
     setLoading(true);
@@ -168,13 +184,34 @@ const PrescriptionForm = ({ token, onDone }) => {
 
     try {
       const res = await createPrescriptionAPI(payload);
+      const saved = res.data?.data || res.data || {};
+      const savedVisit = saved.visit || {};
+      const savedPrescription = saved.prescription || {};
 
-      downloadPDF({
-        ...res.data,
-        patientName: token.patient_name,
-        patientAge: token.patient_age,
-        tokenDisplay: token.token_display,
-      });
+      const prescriptionForPdf = {
+        ...saved,
+        ...savedVisit,
+        ...savedPrescription,
+        patientName,
+        patientAge,
+        patientGender,
+        patientCode,
+        patientPhone,
+        tokenDisplay: token?.token_display || token?.tokenDisplay || token?.token || token?.id,
+        doctorName,
+        createdAt:
+          savedPrescription.created_at ||
+          savedPrescription.createdAt ||
+          savedVisit.visit_date ||
+          savedVisit.created_at ||
+          savedVisit.createdAt,
+      };
+
+      if (printAfterSave) {
+        printPDF(prescriptionForPdf);
+      } else {
+        downloadPDF(prescriptionForPdf);
+      }
 
       onDone();
     } catch (err) {
@@ -182,6 +219,11 @@ const PrescriptionForm = ({ token, onDone }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await submitAndRender({ printAfterSave: false });
   };
 
   return (
@@ -473,10 +515,23 @@ const PrescriptionForm = ({ token, onDone }) => {
             </div>
           )}
 
-          <Button type="submit" disabled={loading} className="h-12 w-full">
-            <FaSave className="mr-2" />
-            {loading ? "Saving..." : "Save & Generate PDF"}
-          </Button>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button type="submit" disabled={loading} className="h-12 w-full">
+              <FaSave className="mr-2" />
+              {loading ? "Saving..." : "Save & Generate PDF"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              className="h-12 w-full"
+              onClick={() => submitAndRender({ printAfterSave: true })}
+            >
+              <FaPrint className="mr-2" />
+              {loading ? "Saving..." : "Save & Print"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

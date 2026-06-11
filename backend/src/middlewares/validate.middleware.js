@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { errorResponse } from "../utils/apiResponse.js";
+import { VALID_PRESCRIPTION_MEDS_FREQUENCY, TOKEN_STATUS, ROLES } from "../lib/constants.js";
 
 // Schemas
 export const schemas = {
@@ -36,7 +37,11 @@ export const schemas = {
   }),
 
   updateTokenStatus: z.object({
-    status: z.enum(["IN_PROGRESS", "COMPLETED", "CANCELLED"]),
+    status: z.enum([
+      TOKEN_STATUS.IN_PROGRESS,
+      TOKEN_STATUS.COMPLETED,
+      TOKEN_STATUS.CANCELLED,
+    ]),
   }),
 
   // Prescription 
@@ -48,7 +53,7 @@ export const schemas = {
       z.object({
         name:         z.string().min(2, "Medicine name required"),
         dosage:       z.string().min(1, "Dosage required"),
-        frequency:    z.enum(["1-0-0","0-0-1","1-0-1","1-1-1","SOS","TDS","BD"]),
+        frequency:    z.enum(VALID_PRESCRIPTION_MEDS_FREQUENCY),
         duration:     z.string().min(1, "Duration required"),
         instructions: z.string().optional(),
       })
@@ -64,7 +69,7 @@ export const schemas = {
       z.object({
         name:         z.string().min(2),
         dosage:       z.string().min(1),
-        frequency:    z.enum(["1-0-0","0-0-1","1-0-1","1-1-1","SOS","TDS","BD"]),
+        frequency:    z.enum(VALID_PRESCRIPTION_MEDS_FREQUENCY),
         duration:     z.string().min(1),
         instructions: z.string().optional(),
       })
@@ -78,7 +83,7 @@ export const schemas = {
       z.object({
         name:         z.string().min(2),
         dosage:       z.string().min(1),
-        frequency:    z.enum(["1-0-0","0-0-1","1-0-1","1-1-1","SOS","TDS","BD"]),
+        frequency:    z.enum(VALID_PRESCRIPTION_MEDS_FREQUENCY),
         duration:     z.string().min(1),
         instructions: z.string().optional(),
       })

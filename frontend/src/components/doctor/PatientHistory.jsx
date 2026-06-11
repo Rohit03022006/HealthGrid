@@ -135,7 +135,7 @@ const PatientHistory = ({ patientId }) => {
                           )}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Dr. {visit.doctor_name || "N/A"}
+                          {visit.doctor_name || "N/A"}
                         </p>
                       </div>
 

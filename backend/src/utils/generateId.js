@@ -5,7 +5,7 @@ export const generatePatientCode = (sequenceNumber) => {
   return `PAT-${year}-${padded}`;
 };
 
-// T001, T002 — daily reset
+// T001, T002  - daily reset
 export const generateTokenDisplay = (number) => {
   return `T${String(number).padStart(3, "0")}`;
 };

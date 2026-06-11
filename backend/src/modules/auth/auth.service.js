@@ -33,7 +33,7 @@ export const registerService = async ({ name, email, password, role }) => {
 };
 
 export const loginService = async (email, password) => {
-  // Single optimized query — sirf zaruri columns fetch 
+  // Single optimized query  - sirf zaruri columns fetch 
   const { rows } = await pool.query(
     `SELECT id, name, email, password, role 
      FROM users 

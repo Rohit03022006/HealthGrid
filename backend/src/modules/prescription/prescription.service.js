@@ -1,5 +1,6 @@
 import pool from "../../config/db.js";
 import { getIO } from "../../websocket/socket.js";
+import { TOKEN_STATUS } from "../../lib/constants.js";
 
 //  Create Prescription ──
 export const createPrescriptionService = async (prescriptionData, doctorId) => {
@@ -31,7 +32,7 @@ export const createPrescriptionService = async (prescriptionData, doctorId) => {
     );
 
     if (!tokenRows[0]) throw new Error("TOKEN_NOT_FOUND");
-    if (tokenRows[0].status !== "IN_PROGRESS") throw new Error("TOKEN_NOT_ACTIVE");
+    if (tokenRows[0].status !== TOKEN_STATUS.IN_PROGRESS) throw new Error("TOKEN_NOT_ACTIVE");
 
     const patientId = tokenRows[0].patient_id;
 
@@ -68,10 +69,10 @@ export const createPrescriptionService = async (prescriptionData, doctorId) => {
     // Token COMPLETED mark
     await client.query(
       `UPDATE tokens SET
-         status       = 'COMPLETED',
+         status       = $2,
          completed_at = NOW()
        WHERE id = $1`,
-      [tokenId]
+      [tokenId, TOKEN_STATUS.COMPLETED]
     );
 
     await client.query("COMMIT");
@@ -82,7 +83,7 @@ export const createPrescriptionService = async (prescriptionData, doctorId) => {
       prescription: rxRows[0],
     };
 
-    // WebSocket — doctor screen pe next patient load ho
+    // WebSocket  - doctor screen pe next patient load ho
     const io = getIO();
     io.emit("queue:token_completed", { tokenId, patientId });
 

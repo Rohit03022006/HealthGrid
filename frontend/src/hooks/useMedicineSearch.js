@@ -7,7 +7,7 @@ export const useMedicineSearch = () => {
   const debounceRef             = useRef(null);
 
   const search = useCallback((query) => {
-    // Debounce — 300ms wait karo
+    // Debounce  - 300ms wait karo
     clearTimeout(debounceRef.current);
 
     if (!query || query.length < 2) {

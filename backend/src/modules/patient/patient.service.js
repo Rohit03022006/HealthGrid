@@ -23,7 +23,7 @@ export const registerPatientService = async (patientData) => {
       throw new Error("PATIENT_EXISTS");
     }
 
-    // Next sequence number lo — fast counter
+    // Next sequence number lo  - fast counter
     const seqResult = await client.query(
       `SELECT COUNT(*) + 1 AS next_seq FROM patients`,
     );
@@ -54,7 +54,7 @@ export const getPatientsService = async (page = 1, limit = 20, search = "") => {
   const offset = (page - 1) * limit;
   const searchTerm = `%${search}%`;
 
-  // Data + count ek saath — 2 queries parallel chalao
+  // Data + count ek saath  - 2 queries parallel chalao
   const [dataResult, countResult] = await Promise.all([
     pool.query(
       `SELECT 
@@ -102,7 +102,7 @@ export const getPatientByIdService = async (patientId) => {
 
   if (!patientRows[0]) throw new Error("PATIENT_NOT_FOUND");
 
-  // Last 10 visits with prescriptions — single JOIN query
+  // Last 10 visits with prescriptions  - single JOIN query
   const { rows: visitRows } = await pool.query(
     `SELECT 
        v.id AS visit_id,

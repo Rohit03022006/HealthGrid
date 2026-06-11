@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { FaHeartbeat } from "react-icons/fa";
-
+import logo from "@/assets/logo.png";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 
@@ -18,7 +17,12 @@ const AdminPage = lazy(() => import("@/pages/admin/AdminPage"));
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
     <div className="flex flex-col items-center gap-4">
-      <FaHeartbeat className="h-14 w-14 animate-pulse text-primary" />
+      <img
+        src={logo}
+        alt="HealthGrid logo"
+        className="h-16 w-16 animate-pulse rounded-xl object-contain"
+      />
+
       <p className="text-sm font-medium text-muted-foreground">
         Loading Hospital System...
       </p>

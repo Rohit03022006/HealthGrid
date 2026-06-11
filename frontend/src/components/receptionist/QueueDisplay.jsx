@@ -15,8 +15,10 @@ import {
 } from "react-icons/fa";
 
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { getQueueTodayAPI } from "@/services/tokenService";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { getQueueTodayAPI } from "@/services/tokenService";
+import { useQueueStore } from "@/store/queueStore";
+import { TOKEN_STATUS } from "@/lib/constants";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +33,12 @@ import {
 
 const QueueDisplay = () => {
   const [selectedToken, setSelectedToken] = useState(null);
-  const { queue, setQueue, connected } = useWebSocket();
+  useWebSocket();
+
+  const queue = useQueueStore((state) => state.queue) ?? [];
+  const setQueue = useQueueStore((state) => state.setQueue);
+  const connected = useQueueStore((state) => state.connected);
+
   const { isOnline, pending, syncing } = useOfflineSync();
   const [loading, setLoading] = useState(true);
 
@@ -39,8 +46,10 @@ const QueueDisplay = () => {
     const fetchQueue = async () => {
       try {
         const res = await getQueueTodayAPI();
-        setQueue(res.data.queue || []);
-      } catch {
+        const queueData = res?.data?.queue ?? res?.data ?? res?.queue ?? [];
+        setQueue(Array.isArray(queueData) ? queueData : []);
+      } catch (error) {
+        console.error("Failed to fetch queue:", error);
         setQueue([]);
       } finally {
         setLoading(false);
@@ -50,28 +59,24 @@ const QueueDisplay = () => {
     fetchQueue();
   }, [setQueue]);
 
-  const priorityLabel = (p) => {
-    if (p === 1) return "URGENT";
-    if (p === 2) return "HIGH";
+  const priorityLabel = (priority) => {
+    if (priority === 1) return "URGENT";
+    if (priority === 2) return "HIGH";
     return "NORMAL";
   };
 
-  const priorityVariant = (p) => {
-    if (p === 1) return "destructive";
-    if (p === 2) return "secondary";
+  const priorityVariant = (priority) => {
+    if (priority === 1) return "destructive";
+    if (priority === 2) return "secondary";
     return "outline";
   };
 
-  const waitingCount = queue.filter((t) => t.status === "WAITING").length;
-  const inProgressCount = queue.filter(
-    (t) => t.status === "IN_PROGRESS",
-  ).length;
-
+  const waitingCount = queue.filter((token) => token.status === TOKEN_STATUS.WAITING).length;
+  const inProgressCount = queue.filter((token) => token.status === TOKEN_STATUS.IN_PROGRESS).length;
   const isLive = isOnline && connected;
 
   return (
     <div className="space-y-5">
-      {/* Sync Status */}
       <div className="flex flex-wrap gap-2">
         <Badge
           variant={isOnline ? "secondary" : "destructive"}
@@ -108,7 +113,6 @@ const QueueDisplay = () => {
         </Badge>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <Card className="border-blue-200 bg-blue-50 shadow-none dark:border-blue-900/40 dark:bg-blue-950/30">
           <CardContent className="flex flex-col items-center justify-center p-2 text-center sm:p-4">
@@ -116,7 +120,6 @@ const QueueDisplay = () => {
               <FaUserInjured className="shrink-0" />
               <span>Total</span>
             </p>
-
             <p className="mt-2 text-center text-2xl font-bold leading-none text-blue-800 sm:text-3xl dark:text-blue-300">
               {queue.length}
             </p>
@@ -129,7 +132,6 @@ const QueueDisplay = () => {
               <FaClock className="shrink-0" />
               <span>Waiting</span>
             </p>
-
             <p className="mt-2 text-center text-2xl font-bold leading-none text-amber-800 sm:text-3xl dark:text-amber-300">
               {waitingCount}
             </p>
@@ -143,7 +145,6 @@ const QueueDisplay = () => {
               <span className="hidden sm:inline">In Progress</span>
               <span className="sm:hidden">Progress</span>
             </p>
-
             <p className="mt-2 text-center text-2xl font-bold leading-none text-emerald-800 sm:text-3xl dark:text-emerald-300">
               {inProgressCount}
             </p>
@@ -153,7 +154,6 @@ const QueueDisplay = () => {
 
       <Separator />
 
-      {/* Queue List */}
       {loading ? (
         <Card className="shadow-none">
           <CardContent className="flex min-h-40 items-center justify-center p-6">
@@ -189,16 +189,13 @@ const QueueDisplay = () => {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 pl-1">
                       <p className="text-xs text-muted-foreground">Token</p>
-                      <p className="break-words text-3xl font-black leading-tight tracking-wide text-primary sm:text-4xl">
+                      <p className="wrap-break-word text-3xl font-black leading-tight tracking-wide text-primary sm:text-4xl">
                         {token.token_display}
                       </p>
                     </div>
 
                     <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
-                      <Badge
-                        variant={priorityVariant(token.priority)}
-                        className="gap-1"
-                      >
+                      <Badge variant={priorityVariant(token.priority)} className="gap-1">
                         <FaBolt />
                         {priorityLabel(token.priority)}
                       </Badge>
@@ -225,15 +222,11 @@ const QueueDisplay = () => {
 
                     <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
                       <FaNotesMedical className="shrink-0" />
-                      <span className="min-w-0 truncate">
-                        {token.reason || "General"}
-                      </span>
+                      <span className="min-w-0 truncate">{token.reason || "General"}</span>
                     </div>
                   </div>
 
-                  <p
-                    className="mt-3 text-xs text-muted-foreground no-underline hover:underline hover:text-blue-800"
-                  >
+                  <p className="mt-3 text-xs text-muted-foreground no-underline hover:text-blue-800 hover:underline">
                     Click to view full patient details
                   </p>
                 </CardContent>
@@ -243,7 +236,6 @@ const QueueDisplay = () => {
         </div>
       )}
 
-      {/* Token Detail Dialog */}
       <Dialog
         open={Boolean(selectedToken)}
         onOpenChange={(open) => {
@@ -257,9 +249,7 @@ const QueueDisplay = () => {
               Token Details
             </DialogTitle>
 
-            <DialogDescription>
-              Patient and queue information for this token.
-            </DialogDescription>
+            <DialogDescription>Patient and queue information for this token.</DialogDescription>
           </DialogHeader>
 
           {selectedToken && (
@@ -288,11 +278,7 @@ const QueueDisplay = () => {
                   <DetailRow
                     icon={<FaUserInjured />}
                     label="Patient Name"
-                    value={
-                      selectedToken.patient_name ||
-                      selectedToken.patient?.name ||
-                      "N/A"
-                    }
+                    value={selectedToken.patient_name || selectedToken.patient?.name || "N/A"}
                   />
 
                   <Separator />
@@ -300,13 +286,7 @@ const QueueDisplay = () => {
                   <DetailRow
                     icon={<FaClock />}
                     label="Age"
-                    value={
-                      selectedToken.patient_age
-                        ? `${selectedToken.patient_age} yrs`
-                        : selectedToken.patient?.age
-                          ? `${selectedToken.patient.age} yrs`
-                          : "N/A"
-                    }
+                    value={selectedToken.patient_age ? `${selectedToken.patient_age} yrs` : selectedToken.patient?.age ? `${selectedToken.patient.age} yrs` : "N/A"}
                   />
 
                   <Separator />
@@ -314,11 +294,7 @@ const QueueDisplay = () => {
                   <DetailRow
                     icon={<FaPhoneAlt />}
                     label="Phone"
-                    value={
-                      selectedToken.patient_phone ||
-                      selectedToken.patient?.phone ||
-                      "N/A"
-                    }
+                    value={selectedToken.patient_phone || selectedToken.patient?.phone || "N/A"}
                   />
 
                   <Separator />
@@ -334,13 +310,7 @@ const QueueDisplay = () => {
                   <DetailRow
                     icon={<FaCalendarAlt />}
                     label="Issued At"
-                    value={
-                      selectedToken.issued_at
-                        ? new Date(selectedToken.issued_at).toLocaleString(
-                            "en-IN",
-                          )
-                        : "N/A"
-                    }
+                    value={selectedToken.issued_at ? new Date(selectedToken.issued_at).toLocaleString("en-IN") : "N/A"}
                   />
                 </CardContent>
               </Card>
@@ -352,19 +322,17 @@ const QueueDisplay = () => {
   );
 };
 
-const DetailRow = ({ icon, label, value }) => {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-        {icon}
-      </span>
+const DetailRow = ({ icon, label, value }) => (
+  <div className="flex items-start gap-3">
+    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+      {icon}
+    </span>
 
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="break-words font-medium">{value}</p>
-      </div>
+    <div className="min-w-0 flex-1">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="wrap-break-word font-medium">{value}</p>
     </div>
-  );
-};
+  </div>
+);
 
 export default QueueDisplay;

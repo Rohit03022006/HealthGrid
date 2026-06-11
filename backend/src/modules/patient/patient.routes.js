@@ -10,20 +10,21 @@ import {
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
+import { ROLES } from "../../lib/constants.js";
 
 const router = Router();
 
 router.use(authMiddleware);
 
 // Search by phone must come before /:id
-router.get("/search", requireRole("RECEPTIONIST", "DOCTOR"), getPatientByPhone);
+router.get("/search", requireRole(ROLES.RECEPTIONIST, ROLES.DOCTOR), getPatientByPhone);
 
 // Receptionist + Doctor + Admin can view patients
-router.get("/", requireRole("RECEPTIONIST", "DOCTOR", "ADMIN"), getPatients);
+router.get("/", requireRole(ROLES.RECEPTIONIST, ROLES.DOCTOR, ROLES.ADMIN), getPatients);
 
 router.get(
   "/:id",
-  requireRole("RECEPTIONIST", "DOCTOR", "ADMIN"),
+  requireRole(ROLES.RECEPTIONIST, ROLES.DOCTOR, ROLES.ADMIN),
   getPatientById,
 );
 
@@ -31,10 +32,10 @@ router.get(
 router.post(
   "/",
   validate("registerPatient"),
-  requireRole("RECEPTIONIST"),
+  requireRole(ROLES.RECEPTIONIST),
   registerPatient,
 );
 
-router.put("/:id", requireRole("RECEPTIONIST", "ADMIN"), updatePatient);
+router.put("/:id", requireRole(ROLES.RECEPTIONIST, ROLES.ADMIN), updatePatient);
 
 export default router;

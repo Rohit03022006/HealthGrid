@@ -1,9 +1,10 @@
 import axios from "axios";
 import { getToken, logout } from "@/lib/auth";
+import { API_TIMEOUT } from "@/lib/constants";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
-  timeout: 10000,
+  timeout: API_TIMEOUT,
   headers: {
     "Content-Type": "application/json",
   },
@@ -37,7 +38,7 @@ api.interceptors.response.use(
     // Server down
     if (!error.response) {
       return Promise.reject({
-        message: "Network error — server unreachable",
+        message: "Network error  - server unreachable",
       });
     }
 

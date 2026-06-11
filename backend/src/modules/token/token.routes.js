@@ -8,6 +8,7 @@ import {
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
+import { ROLES } from "../../lib/constants.js";
 
 const router = Router();
 
@@ -17,21 +18,21 @@ router.use(authMiddleware);
 router.post(
   "/",
   validate("assignToken"),
-  requireRole("RECEPTIONIST"),
+  requireRole(ROLES.RECEPTIONIST),
   assignToken,
 );
 
 // Doctor + Receptionist queue dekhte hain
-router.get("/queue", requireRole("DOCTOR", "RECEPTIONIST"), getQueueToday);
+router.get("/queue", requireRole(ROLES.DOCTOR, ROLES.RECEPTIONIST), getQueueToday);
 
 // Single token details
-router.get("/:id", requireRole("DOCTOR", "RECEPTIONIST"), getTokenById);
+router.get("/:id", requireRole(ROLES.DOCTOR, ROLES.RECEPTIONIST), getTokenById);
 
 // Doctor status update karta hai
 router.patch(
   "/:id/status",
   validate("updateTokenStatus"),
-  requireRole("DOCTOR"),
+  requireRole(ROLES.DOCTOR),
   updateTokenStatus,
 );
 
