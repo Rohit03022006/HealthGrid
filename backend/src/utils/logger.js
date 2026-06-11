@@ -1,0 +1,11 @@
+import { createWriteStream } from "fs";
+
+const timestamp = () => new Date().toISOString();
+
+const logger = {
+  info: (msg) => console.log(`[${timestamp()}] INFO: ${msg}`),
+  error: (msg) => console.error(`[${timestamp()}] ERROR: ${msg}`),
+  warn: (msg) => console.warn(`[${timestamp()}] WARN: ${msg}`),
+};
+
+export default logger;
