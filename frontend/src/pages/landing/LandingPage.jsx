@@ -7,17 +7,27 @@ import HowItWorks from "@/components/common/landing/HowItWorks";
 import Footer from "@/components/common/landing/Footer";
 
 const LandingPage = () => {
-  const { canInstall, installed, install } = usePWAInstall();
+  const pwaInstall = usePWAInstall();
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar canInstall={canInstall} installed={installed} install={install} />
+    <div className="min-h-screen overflow-hidden bg-background">
+      <Navbar
+        canInstall={pwaInstall.canInstall}
+        installed={pwaInstall.installed}
+        install={pwaInstall.install}
+      />
 
-      <Hero />
-      <Features />
-      <HowItWorks />
+      <main>
+        <Hero />
+        <Features />
+        <HowItWorks />
+      </main>
 
-      <Footer canInstall={canInstall} installed={installed} install={install} />
+      <Footer
+        canInstall={pwaInstall.canInstall}
+        installed={pwaInstall.installed}
+        install={pwaInstall.install}
+      />
     </div>
   );
 };

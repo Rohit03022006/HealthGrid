@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FiCalendar, FiActivity, FiLogOut } from "react-icons/fi";
+
+import { FiActivity, FiCalendar, FiLogOut } from "react-icons/fi";
 
 import StatsCard from "@/components/admin/StatsCard";
 import OPDChart from "@/components/admin/OPDChart";
@@ -8,10 +10,39 @@ import DoctorLoadChart from "@/components/admin/DoctorLoadChart";
 import HeatmapPanel from "@/components/admin/HeatmapPanel";
 import TopMedicinesPanel from "@/components/admin/TopMedicinesPanel";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import SyncStatusBadge from "@/components/common/SyncStatusBadge";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+
+const containerAnimation = {
+  hidden: {
+    opacity: 0,
+  },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+    },
+  },
+};
+
+const fadeUpAnimation = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      ease: "easeOut",
+    },
+  },
+};
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -27,65 +58,135 @@ const AdminPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerAnimation}
+        className="mx-auto max-w-7xl space-y-6"
+      >
+        {/* Header */}
+        <motion.div
+          variants={fadeUpAnimation}
+          className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        >
           <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
+            <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
                 <FiActivity className="text-primary" />
-              </div>
+              </span>
+              Admin Dashboard
+            </h1>
 
-              <div>
-                <h1 className="font-heading text-2xl font-bold tracking-tight md:text-3xl">
-                  Admin Dashboard
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Hospital analytics, OPD load, medicines and peak hours.
-                </p>
-              </div>
-            </div>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Hospital analytics, OPD load, medicines and peak hours.
+            </p>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center md:w-auto">
-            <Card className="w-full md:w-auto">
-              <CardContent className="flex items-center gap-3 p-3">
-                <FiCalendar className="h-5 w-5 text-muted-foreground" />
+          <div className="flex flex-wrap items-center gap-2">
+            <SyncStatusBadge />
+
+            <Card className="border-primary/10 bg-background/80 shadow-sm backdrop-blur">
+              <CardContent className="flex items-center gap-3 p-2">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <FiCalendar className="h-4 w-4 text-primary" />
+                </span>
+
                 <Input
                   type="date"
                   value={date}
                   max={today}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full md:w-[180px]"
+                  className="h-9 w-[165px]"
                 />
-                <Badge variant="secondary">Selected</Badge>
+
+                <Badge variant="secondary" className="rounded-full">
+                  Selected
+                </Badge>
               </CardContent>
             </Card>
 
             <Button
               variant="destructive"
               onClick={handleLogout}
-              className="h-11 w-full gap-2 px-5 text-base sm:w-auto"
+              className="h-11 gap-2 px-5"
             >
               <FiLogOut className="h-5 w-5" />
               Logout
             </Button>
           </div>
-        </div>
+        </motion.div>
 
-        <StatsCard date={date} />
+        {/* Stats */}
+        <motion.div variants={fadeUpAnimation}>
+          <StatsCard date={date} />
+        </motion.div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <OPDChart />
-          <DoctorLoadChart date={date} />
-        </div>
+        {/* Charts */}
+        <motion.div
+          variants={fadeUpAnimation}
+          className="grid gap-6 lg:grid-cols-2"
+        >
+          <motion.div
+            whileHover={{
+              y: -3,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 22,
+            }}
+          >
+            <OPDChart />
+          </motion.div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
-          <HeatmapPanel />
-          <TopMedicinesPanel />
-        </div>
-      </div>
-    </div>
+          <motion.div
+            whileHover={{
+              y: -3,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 22,
+            }}
+          >
+            <DoctorLoadChart date={date} />
+          </motion.div>
+        </motion.div>
+
+        {/* Insights */}
+        <motion.div
+          variants={fadeUpAnimation}
+          className="grid gap-6 xl:grid-cols-2"
+        >
+          <motion.div
+            whileHover={{
+              y: -3,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 22,
+            }}
+          >
+            <HeatmapPanel />
+          </motion.div>
+
+          <motion.div
+            whileHover={{
+              y: -3,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 22,
+            }}
+          >
+            <TopMedicinesPanel />
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </main>
   );
 };
 

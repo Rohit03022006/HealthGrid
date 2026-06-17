@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { checkDrugInteractions } from "@/services/openFDAService";
 
-export const useDrugInteraction = (medicines) => {
+export default function useDrugInteraction(medicines) {
   const [warnings, setWarnings] = useState([]);
   const [checking, setChecking] = useState(false);
   const debounceRef = useRef(null);
@@ -37,5 +37,4 @@ export const useDrugInteraction = (medicines) => {
   ]);
 
   return { warnings, checking };
-};
-export default useDrugInteraction;
+}
