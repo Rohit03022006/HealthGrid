@@ -108,7 +108,7 @@ const DoctorPage = () => {
           <div className="space-y-6">
             {!activeToken && (
               <Card className="border-dashed shadow-none">
-                <CardContent className="flex min-h-[320px] items-center justify-center p-6 sm:min-h-[420px]">
+                <CardContent className="flex min-h-80 items-center justify-center p-6 sm:min-h-105">
                   <div className="max-w-sm text-center">
                     <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
                       <FaStethoscope className="text-2xl text-muted-foreground" />

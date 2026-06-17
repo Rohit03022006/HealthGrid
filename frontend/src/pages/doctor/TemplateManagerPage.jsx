@@ -7,58 +7,42 @@ import {
   deleteTemplateAPI,
 } from "@/services/templateService";
 
-import { FREQUENCY_OPTIONS } from "@/lib/constants";
+import { useNavigate } from "react-router-dom";
+
+import { FiPlus, FiHome, FiFileText } from "react-icons/fi";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import TemplateFormDialog from "@/components/templates/TemplateFormDialog";
+import TemplateCard from "@/components/templates/TemplateCard";
+import SyncStatusBadge from "@/components/common/SyncStatusBadge";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
-import { Label } from "@/components/ui/label";
-
-const EMPTY_MEDICINE = {
+const createEmptyMedicine = () => ({
   name: "",
   dosage: "",
   frequency: "1-0-1",
   duration: "",
   instructions: "",
-};
+});
 
-const EMPTY_FORM = {
+const createEmptyForm = () => ({
   name: "",
-  medicines: [{ ...EMPTY_MEDICINE }],
+  medicines: [createEmptyMedicine()],
   advice: "",
-};
+});
 
 const TemplateManagerPage = () => {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
 
   const [editingTemplate, setEditingTemplate] = useState(null);
-
   const [showForm, setShowForm] = useState(false);
 
-  const [form, setForm] = useState(EMPTY_FORM);
-
+  const [form, setForm] = useState(createEmptyForm);
   const [errors, setErrors] = useState({});
 
   const fetchTemplates = async () => {
@@ -66,7 +50,6 @@ const TemplateManagerPage = () => {
 
     try {
       const res = await getTemplatesAPI();
-
       setTemplates(res.data || []);
     } catch {
       setTemplates([]);
@@ -82,7 +65,7 @@ const TemplateManagerPage = () => {
 
   const handleCreate = () => {
     setEditingTemplate(null);
-    setForm(EMPTY_FORM);
+    setForm(createEmptyForm());
     setErrors({});
     setShowForm(true);
   };
@@ -91,10 +74,11 @@ const TemplateManagerPage = () => {
     setEditingTemplate(template);
 
     setForm({
-      name: template.name,
-      medicines: template.medicines.map((m) => ({
-        ...m,
-      })),
+      name: template.name || "",
+      medicines:
+        template.medicines?.length > 0
+          ? template.medicines.map((medicine) => ({ ...medicine }))
+          : [createEmptyMedicine()],
       advice: template.advice || "",
     });
 
@@ -105,22 +89,41 @@ const TemplateManagerPage = () => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingTemplate(null);
-    setForm(EMPTY_FORM);
+    setForm(createEmptyForm());
     setErrors({});
+  };
+
+  const handleNameChange = (value) => {
+    setForm((prev) => ({
+      ...prev,
+      name: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      name: "",
+    }));
+  };
+
+  const handleAdviceChange = (value) => {
+    setForm((prev) => ({
+      ...prev,
+      advice: value,
+    }));
   };
 
   const handleMedicineChange = (index, field, value) => {
     setForm((prev) => {
-      const updated = [...prev.medicines];
+      const updatedMedicines = [...prev.medicines];
 
-      updated[index] = {
-        ...updated[index],
+      updatedMedicines[index] = {
+        ...updatedMedicines[index],
         [field]: value,
       };
 
       return {
         ...prev,
-        medicines: updated,
+        medicines: updatedMedicines,
       };
     });
 
@@ -133,7 +136,7 @@ const TemplateManagerPage = () => {
   const addMedicine = () => {
     setForm((prev) => ({
       ...prev,
-      medicines: [...prev.medicines, { ...EMPTY_MEDICINE }],
+      medicines: [...prev.medicines, createEmptyMedicine()],
     }));
   };
 
@@ -153,13 +156,13 @@ const TemplateManagerPage = () => {
       newErrors.name = "Template name required";
     }
 
-    form.medicines.forEach((med, i) => {
+    form.medicines.forEach((med, index) => {
       if (!med.name.trim()) {
-        newErrors[`med_${i}_name`] = "Medicine name required";
+        newErrors[`med_${index}_name`] = "Medicine name required";
       }
 
       if (!med.duration.trim()) {
-        newErrors[`med_${i}_duration`] = "Duration required";
+        newErrors[`med_${index}_duration`] = "Duration required";
       }
     });
 
@@ -177,7 +180,13 @@ const TemplateManagerPage = () => {
 
     const payload = {
       name: form.name.trim(),
-      medicines: form.medicines,
+      medicines: form.medicines.map((med) => ({
+        name: med.name.trim(),
+        dosage: med.dosage.trim(),
+        frequency: med.frequency,
+        duration: med.duration.trim(),
+        instructions: med.instructions.trim(),
+      })),
       advice: form.advice.trim() || undefined,
     };
 
@@ -189,7 +198,6 @@ const TemplateManagerPage = () => {
       }
 
       await fetchTemplates();
-
       handleCancel();
     } catch (err) {
       if (err?.message?.includes("already exists")) {
@@ -214,7 +222,9 @@ const TemplateManagerPage = () => {
     try {
       await deleteTemplateAPI(templateId);
 
-      setTemplates((prev) => prev.filter((t) => t.id !== templateId));
+      setTemplates((prev) =>
+        prev.filter((template) => template.id !== templateId),
+      );
     } catch (err) {
       console.error("Delete failed:", err.message);
     } finally {
@@ -228,259 +238,52 @@ const TemplateManagerPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">My Templates</h1>
+            <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                <FiFileText className="text-primary" />
+              </span>
+              My Templates
+            </h1>
 
-            <p className="text-muted-foreground">
+            <p className="mt-1 text-muted-foreground">
               Manage prescription templates
             </p>
           </div>
 
-          <Button onClick={handleCreate}>
-            <FiPlus className="mr-2 h-4 w-4" />
-            New Template
-          </Button>
+          <div className="flex items-center gap-2">
+            <SyncStatusBadge />
+
+            <Button
+              variant="outline"
+              className="h-11 gap-2"
+              onClick={() => navigate("/doctor")}
+            >
+              <FiHome className="h-4 w-4" />
+              Home
+            </Button>
+
+            <Button className="h-11 gap-2" onClick={handleCreate}>
+              <FiPlus className="h-4 w-4" />
+              New Template
+            </Button>
+          </div>
         </div>
 
         {/* Create / Edit Dialog */}
-        <Dialog
+        <TemplateFormDialog
           open={showForm}
-          onOpenChange={(open) => {
-            if (!open) handleCancel();
-          }}
-        >
-          <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingTemplate ? "Edit Template" : "Create Template"}
-              </DialogTitle>
-            </DialogHeader>
-
-            <form onSubmit={handleSave} className="space-y-6">
-              {/* Template Name */}
-              <div className="space-y-2">
-                <Input
-                  placeholder="Template Name (e.g. Viral Fever)"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                />
-
-                {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name}</p>
-                )}
-              </div>
-
-              {/* Medicines */}
-              <div className="space-y-4">
-                {form.medicines.map((med, index) => (
-                  <Card key={index} className="relative">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">
-                          Medicine {index + 1}
-                        </CardTitle>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeMedicine(index)}
-                          disabled={form.medicines.length === 1}
-                          className="h-8 px-2 text-destructive hover:text-destructive"
-                        >
-                          <FiTrash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                      {/* Row 1: Name & Dosage */}
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor={`med-name-${index}`}
-                            className="text-sm font-medium"
-                          >
-                            Medicine Name{" "}
-                            <span className="text-destructive">*</span>
-                          </Label>
-                          <Input
-                            id={`med-name-${index}`}
-                            placeholder="e.g. Paracetamol"
-                            value={med.name}
-                            onChange={(e) =>
-                              handleMedicineChange(
-                                index,
-                                "name",
-                                e.target.value,
-                              )
-                            }
-                            className={
-                              errors[`med_${index}_name`]
-                                ? "border-destructive"
-                                : ""
-                            }
-                          />
-                          {errors[`med_${index}_name`] && (
-                            <p className="text-sm text-destructive">
-                              {errors[`med_${index}_name`]}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor={`med-dosage-${index}`}
-                            className="text-sm font-medium"
-                          >
-                            Dosage
-                          </Label>
-                          <Input
-                            id={`med-dosage-${index}`}
-                            placeholder="e.g. 500mg"
-                            value={med.dosage}
-                            onChange={(e) =>
-                              handleMedicineChange(
-                                index,
-                                "dosage",
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      {/* Row 2: Frequency, Duration */}
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor={`med-frequency-${index}`}
-                            className="text-sm font-medium"
-                          >
-                            Frequency
-                          </Label>
-                          <Select
-                            value={med.frequency}
-                            onValueChange={(value) =>
-                              handleMedicineChange(index, "frequency", value)
-                            }
-                          >
-                            <SelectTrigger id={`med-frequency-${index}`}>
-                              <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                              {FREQUENCY_OPTIONS.map((f) => (
-                                <SelectItem key={f.value} value={f.value}>
-                                  {f.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor={`med-duration-${index}`}
-                            className="text-sm font-medium"
-                          >
-                            Duration <span className="text-destructive">*</span>
-                          </Label>
-                          <Input
-                            id={`med-duration-${index}`}
-                            placeholder="e.g. 5 days"
-                            value={med.duration}
-                            onChange={(e) =>
-                              handleMedicineChange(
-                                index,
-                                "duration",
-                                e.target.value,
-                              )
-                            }
-                            className={
-                              errors[`med_${index}_duration`]
-                                ? "border-destructive"
-                                : ""
-                            }
-                          />
-                          {errors[`med_${index}_duration`] && (
-                            <p className="text-sm text-destructive">
-                              {errors[`med_${index}_duration`]}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor={`med-instructions-${index}`}
-                          className="text-sm font-medium"
-                        >
-                          Instructions
-                        </Label>
-                        <Input
-                          id={`med-instructions-${index}`}
-                          placeholder="e.g. Take after meals"
-                          value={med.instructions}
-                          onChange={(e) =>
-                            handleMedicineChange(
-                              index,
-                              "instructions",
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addMedicine}
-                  className="w-full border-dashed hover:border-solid"
-                >
-                  <FiPlus className="mr-2 h-4 w-4" />
-                  Add Medicine
-                </Button>
-              </div>
-
-              {/* Advice */}
-              <Textarea
-                rows={4}
-                placeholder="Advice"
-                value={form.advice}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    advice: e.target.value,
-                  }))
-                }
-              />
-
-              {errors.submit && (
-                <p className="text-sm text-destructive">{errors.submit}</p>
-              )}
-
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCancel}>
-                  Cancel
-                </Button>
-
-                <Button type="submit" disabled={saving}>
-                  {saving
-                    ? "Saving..."
-                    : editingTemplate
-                      ? "Update Template"
-                      : "Create Template"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+          form={form}
+          errors={errors}
+          saving={saving}
+          editingTemplate={editingTemplate}
+          onCancel={handleCancel}
+          onSave={handleSave}
+          onNameChange={handleNameChange}
+          onAdviceChange={handleAdviceChange}
+          onMedicineChange={handleMedicineChange}
+          onAddMedicine={addMedicine}
+          onRemoveMedicine={removeMedicine}
+        />
 
         {/* Templates List */}
         {loading ? (
@@ -494,7 +297,7 @@ const TemplateManagerPage = () => {
             <CardContent className="py-16 text-center">
               <h3 className="text-lg font-semibold">No templates yet</h3>
 
-              <p className="text-muted-foreground mt-2">
+              <p className="mt-2 text-muted-foreground">
                 Create your first prescription template.
               </p>
 
@@ -507,79 +310,13 @@ const TemplateManagerPage = () => {
         ) : (
           <div className="grid gap-4">
             {templates.map((template) => (
-              <Card
+              <TemplateCard
                 key={template.id}
-                className="transition-all hover:shadow-md"
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>{template.name}</CardTitle>
-
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(template)}
-                      >
-                        <FiEdit2 className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={deleting === template.id}
-                        onClick={() => handleDelete(template.id)}
-                      >
-                        <FiTrash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {/* Medicines */}
-                  <div className="space-y-2">
-                    {template.medicines?.map((med, i) => (
-                      <div
-                        key={i}
-                        className="flex flex-wrap gap-2 rounded-lg border p-3 text-sm"
-                      >
-                        <span className="font-medium">{med.name}</span>
-
-                        {med.dosage && (
-                          <span className="text-muted-foreground">
-                            {med.dosage}
-                          </span>
-                        )}
-
-                        <span className="rounded bg-muted px-2 py-1 text-xs">
-                          {med.frequency}
-                        </span>
-
-                        <span className="rounded bg-muted px-2 py-1 text-xs">
-                          {med.duration}
-                        </span>
-
-                        {med.instructions && (
-                          <span className="text-muted-foreground">
-                            • {med.instructions}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Advice */}
-                  {template.advice && (
-                    <div className="rounded-lg border bg-muted/30 p-3">
-                      <p className="text-sm">
-                        <span className="font-medium">Advice:</span>{" "}
-                        {template.advice}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                template={template}
+                deleting={deleting === template.id}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}
