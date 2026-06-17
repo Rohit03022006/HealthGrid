@@ -1,11 +1,33 @@
-import { createWriteStream } from "fs";
+// src/utils/auditLogger.js
 
-const timestamp = () => new Date().toISOString();
+import pool from "../config/db.js";
+import logger from "./logger.js";
 
-const logger = {
-  info: (msg) => console.log(`[${timestamp()}] INFO: ${msg}`),
-  error: (msg) => console.error(`[${timestamp()}] ERROR: ${msg}`),
-  warn: (msg) => console.warn(`[${timestamp()}] WARN: ${msg}`),
+export const createAuditLog = async ({
+  userId = null,
+  action,
+  tableName,
+  recordId = null,
+  oldData = null,
+  newData = null,
+  ipAddress = null,
+}) => {
+  try {
+    await pool.query(
+      `INSERT INTO audit_logs
+        (user_id, action, table_name, record_id, old_data, new_data, ip_address)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        userId,
+        action,
+        tableName,
+        recordId,
+        oldData ? JSON.stringify(oldData) : null,
+        newData ? JSON.stringify(newData) : null,
+        ipAddress,
+      ],
+    );
+  } catch (err) {
+    logger.error(`Audit log failed: ${err.message}`);
+  }
 };
-
-export default logger;
