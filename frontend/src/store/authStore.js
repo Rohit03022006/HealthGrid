@@ -7,10 +7,10 @@ import { ROLES } from "@/lib/constants";
 
 export const useAuthStore = create((set) => ({
   //  State
-  user:  getUser(),   // JWT se initial user
-  token: getToken(),  // localStorage se initial token
+  user: getUser(), // JWT se initial user
+  token: getToken(), // localStorage se initial token
 
-  // Actions 
+  // Actions
   setAuth: (user, token) => {
     localStorage.setItem("token", token);
     set({ user, token });
@@ -21,9 +21,9 @@ export const useAuthStore = create((set) => ({
     set({ user: null, token: null });
   },
 
-  // Computed 
+  // Computed
   isAuthenticated: () => !!getToken(),
-  isDoctor:        () => getUser()?.role === ROLES.DOCTOR,
-  isReceptionist:  () => getUser()?.role === ROLES.RECEPTIONIST,
-  isAdmin:         () => getUser()?.role === ROLES.ADMIN,
+  isDoctor: () => getUser()?.role === ROLES.DOCTOR,
+  isReceptionist: () => getUser()?.role === ROLES.RECEPTIONIST,
+  isAdmin: () => getUser()?.role === ROLES.ADMIN,
 }));

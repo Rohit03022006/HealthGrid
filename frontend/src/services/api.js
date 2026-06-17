@@ -10,40 +10,47 @@ const api = axios.create({
   },
 });
 
-//  Request Interceptor
-// Har request mein JWT token automatically add karo
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = getToken();
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response Interceptor
 api.interceptors.response.use(
-  (response) => response.data, // Seedha data return karo
+  (response) => response.data,
   (error) => {
     const status = error.response?.status;
 
-    // Token expire ya invalid
-    if (status === 401) {
-      logout();
-      return Promise.reject(error);
-    }
-
-    // Server down
+    // Network error (server unreachable / offline)
+    // Logout mat karo
     if (!error.response) {
       return Promise.reject({
-        message: "Network error  - server unreachable",
+        message: "Network error",
+        isNetworkError: true,
       });
     }
 
-    return Promise.reject(error.response.data);
-  }
+    // Sirf genuine 401 pe logout karo
+    // Offline case already upar handle ho chuka hai
+    if (status === 401 && navigator.onLine) {
+      logout();
+    }
+
+    return Promise.reject(
+      error.response?.data || {
+        message: "Something went wrong",
+      },
+    );
+  },
 );
 
 export default api;

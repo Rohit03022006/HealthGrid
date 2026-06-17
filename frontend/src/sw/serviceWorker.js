@@ -17,7 +17,6 @@ export const registerSW = () => {
             }
           });
         });
-
       } catch (err) {
         console.error("Service Worker failed:", err);
       }

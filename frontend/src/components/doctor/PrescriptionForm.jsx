@@ -54,6 +54,7 @@ const PrescriptionForm = ({ token, onDone }) => {
   });
 
   const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [activeSearch, setActiveSearch] = useState(null);
@@ -63,17 +64,33 @@ const PrescriptionForm = ({ token, onDone }) => {
 
   const tokenPatient = token?.patient || {};
   const patientName =
-    token?.patient_name || token?.patientName || tokenPatient.name || token.name || "";
+    token?.patient_name ||
+    token?.patientName ||
+    tokenPatient.name ||
+    token.name ||
+    "";
   const patientAge =
     token?.patient_age || token?.patientAge || tokenPatient.age || "";
   const patientGender =
     token?.patient_gender || token?.patientGender || tokenPatient.gender || "";
   const patientCode =
-    token?.patient_code || token?.patientCode || tokenPatient.patient_code || tokenPatient.code || "";
+    token?.patient_code ||
+    token?.patientCode ||
+    tokenPatient.patient_code ||
+    tokenPatient.code ||
+    "";
   const patientPhone =
-    token?.patient_phone || token?.patientPhone || tokenPatient.phone || tokenPatient.mobile || "";
+    token?.patient_phone ||
+    token?.patientPhone ||
+    tokenPatient.phone ||
+    tokenPatient.mobile ||
+    "";
   const doctorName =
-    token?.doctor_name || token?.doctorName || user?.name || user?.fullName || "";
+    token?.doctor_name ||
+    token?.doctorName ||
+    user?.name ||
+    user?.fullName ||
+    "";
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -89,14 +106,22 @@ const PrescriptionForm = ({ token, onDone }) => {
   }, []);
 
   const handleLoadTemplate = (templateId) => {
-    const template = templates.find((t) => t.id === templateId);
+    if (!templateId) return;
+
+    const template = templates.find((t) => String(t.id) === String(templateId));
+
     if (!template) return;
 
     setForm((prev) => ({
       ...prev,
-      medicines: template.medicines.map((m) => ({ ...m })),
-      advice: template.advice || "",
+      medicines: template.medicines.map((m) => ({
+        ...m,
+      })),
+      advice: template.advice || prev.advice,
     }));
+
+    // same template dobara load ho sake
+    setSelectedTemplate("");
   };
 
   const handleMedicineChange = (index, field, value) => {
@@ -197,7 +222,11 @@ const PrescriptionForm = ({ token, onDone }) => {
         patientGender,
         patientCode,
         patientPhone,
-        tokenDisplay: token?.token_display || token?.tokenDisplay || token?.token || token?.id,
+        tokenDisplay:
+          token?.token_display ||
+          token?.tokenDisplay ||
+          token?.token ||
+          token?.id,
         doctorName,
         createdAt:
           savedPrescription.created_at ||
@@ -241,16 +270,41 @@ const PrescriptionForm = ({ token, onDone }) => {
             <div className="space-y-2">
               <Label>Template</Label>
               <select
-                onChange={(e) => handleLoadTemplate(e.target.value)}
-                className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                value={selectedTemplate}
+                onChange={(e) => {
+                  setSelectedTemplate(e.target.value);
+                  handleLoadTemplate(e.target.value);
+                }}
+                className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">Load Template...</option>
+
                 {templates.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name}
                   </option>
                 ))}
               </select>
+              {selectedTemplate && (
+                <Card className="mt-3">
+                  <CardContent className="p-3">
+                    <div className="space-y-2">
+                      {templates
+                        .find((t) => String(t.id) === String(selectedTemplate))
+                        ?.medicines?.map((m, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <span>{m.name}</span>
+
+                            <Badge variant="secondary">{m.frequency}</Badge>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
 

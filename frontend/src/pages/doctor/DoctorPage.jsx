@@ -57,7 +57,17 @@ const DoctorPage = () => {
             </p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
-             <SyncStatusBadge />
+            <SyncStatusBadge />
+
+            <Button
+              variant="outline"
+              onClick={() => navigate("/doctor/templates")}
+              className="h-11 gap-2"
+            >
+              <FaFileMedical />
+              Manage Templates
+            </Button>
+
             <Button
               variant="destructive"
               onClick={handleLogout}

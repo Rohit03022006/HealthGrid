@@ -1,4 +1,3 @@
-
 import { Server } from "socket.io";
 import { SOCKET_ROOMS } from "../lib/constants.js";
 
@@ -7,8 +6,13 @@ let io;
 export const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL,
+      origin: [
+        "http://localhost:5173",
+        "http://localhost:4173",
+        process.env.CLIENT_URL,
+      ].filter(Boolean),
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
 

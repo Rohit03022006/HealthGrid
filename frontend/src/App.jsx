@@ -11,6 +11,8 @@ const ReceptionistPage = lazy(
   () => import("@/pages/receptionist/ReceptionistPage"),
 );
 const DoctorPage = lazy(() => import("@/pages/doctor/DoctorPage"));
+import TemplateManagerPage from "@/pages/doctor/TemplateManagerPage";
+
 const AdminPage = lazy(() => import("@/pages/admin/AdminPage"));
 
 // Loading Component
@@ -58,6 +60,14 @@ const App = () => {
               element={
                 <ProtectedRoute allowedRoles={["DOCTOR"]}>
                   <DoctorPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctor/templates"
+              element={
+                <ProtectedRoute allowedRoles={["DOCTOR"]}>
+                  <TemplateManagerPage />
                 </ProtectedRoute>
               }
             />

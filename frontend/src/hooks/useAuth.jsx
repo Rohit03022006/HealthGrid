@@ -22,10 +22,21 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      if (!navigator.onLine) {
+        console.log("Offline - using cached user");
+        setLoading(false);
+        return; // getUser() se already set hai
+      }
+
       try {
         const res = await getMeAPI();
         setUser(res.data);
-      } catch {
+      } catch (err) {
+        if (err?.isNetworkError) {
+          console.log("Network error — keeping session");
+          setLoading(false);
+          return;
+        }
         // Token invalid  - logout
         logout();
         setUser(null);

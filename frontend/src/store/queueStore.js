@@ -2,10 +2,10 @@ import { create } from "zustand";
 import { REMOVE_FROM_QUEUE, TOKEN_STATUS } from "@/lib/constants";
 
 export const useQueueStore = create((set, get) => ({
-  //  State 
-  queue:        [],
-  connected:    false,
-  activeToken:  null, // Doctor ka current patient
+  //  State
+  queue: [],
+  connected: false,
+  activeToken: null, // Doctor ka current patient
 
   //  Set Full Queue
   setQueue: (queue) => set({ queue }),
@@ -26,11 +26,11 @@ export const useQueueStore = create((set, get) => ({
     });
   },
 
-  // Update Token Status 
+  // Update Token Status
   updateTokenStatus: (tokenId, status) => {
     set((state) => ({
       queue: state.queue
-        .map((t) => t.id === tokenId ? { ...t, status } : t)
+        .map((t) => (t.id === tokenId ? { ...t, status } : t))
         .filter((t) => !REMOVE_FROM_QUEUE.includes(t.status)),
     }));
   },
@@ -42,12 +42,12 @@ export const useQueueStore = create((set, get) => ({
     }));
   },
 
-  // Set Active Token (Doctor) 
+  // Set Active Token (Doctor)
   setActiveToken: (token) => set({ activeToken: token }),
 
   clearActiveToken: () => set({ activeToken: null }),
 
-  //  Connection Status 
+  //  Connection Status
   setConnected: (connected) => set({ connected }),
 
   //  Computed

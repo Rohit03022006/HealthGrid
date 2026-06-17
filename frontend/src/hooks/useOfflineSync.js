@@ -1,4 +1,5 @@
-// src/hooks/useOfflineSync.js
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { db } from "@/lib/db";
 import { assignTokenAPI } from "@/services/tokenService";
@@ -15,16 +16,28 @@ export const useOfflineSync = () => {
     try {
       const count = await db.pendingSync.count();
 
-      setPending((prev) => {
-        return prev === count ? prev : count;
-      });
+      setPending((prev) => (prev === count ? prev : count));
     } catch (err) {
       console.error("Pending count failed:", err);
 
-      setPending((prev) => {
-        return prev === 0 ? prev : 0;
-      });
+      setPending((prev) => (prev === 0 ? prev : 0));
     }
+  }, []);
+
+  // Offline token generator
+  const getNextOfflineToken = useCallback(async () => {
+    const lastCounter = Number(
+      localStorage.getItem("offlineTokenCounter") || "0"
+    );
+
+    const nextCounter = lastCounter + 1;
+
+    localStorage.setItem(
+      "offlineTokenCounter",
+      String(nextCounter)
+    );
+
+    return `T-PENDING-${String(nextCounter).padStart(3, "0")}`;
   }, []);
 
   const syncPending = useCallback(async () => {
@@ -35,7 +48,9 @@ export const useOfflineSync = () => {
     setSyncing(true);
 
     try {
-      const items = await db.pendingSync.orderBy("createdAt").toArray();
+      const items = await db.pendingSync
+        .orderBy("createdAt")
+        .toArray();
 
       for (const item of items) {
         try {
@@ -57,7 +72,11 @@ export const useOfflineSync = () => {
           if (err?.message === "ALREADY_SYNCED") {
             await db.pendingSync.delete(item.id);
           } else {
-            console.error("Sync failed for item:", item.id, err);
+            console.error(
+              "Sync failed for item:",
+              item.id,
+              err
+            );
             break;
           }
         }
@@ -70,36 +89,39 @@ export const useOfflineSync = () => {
     }
   }, [updatePendingCount]);
 
-  const saveOffline = useCallback(async (type, data) => {
-    const dedupeKey =
-      data?.offlineUuid ||
-      data?.id ||
-      data?.patientId ||
-      `${type}-${JSON.stringify(data)}`;
+  const saveOffline = useCallback(
+    async (type, data) => {
+      const dedupeKey =
+        data?.offlineUuid ||
+        data?.id ||
+        data?.patientId ||
+        `${type}-${JSON.stringify(data)}`;
 
-    const existing = await db.pendingSync
-      .where("dedupeKey")
-      .equals(dedupeKey)
-      .first()
-      .catch(() => null);
+      const existing = await db.pendingSync
+        .where("dedupeKey")
+        .equals(dedupeKey)
+        .first()
+        .catch(() => null);
 
-    if (existing) {
+      if (existing) {
+        await updatePendingCount();
+        return existing.id;
+      }
+
+      const id = await db.pendingSync.add({
+        type,
+        data,
+        dedupeKey,
+        createdAt: new Date().toISOString(),
+        offlineUuid: crypto.randomUUID(),
+      });
+
       await updatePendingCount();
-      return existing.id;
-    }
 
-    const id = await db.pendingSync.add({
-      type,
-      data,
-      dedupeKey,
-      createdAt: new Date().toISOString(),
-      offlineUuid: crypto.randomUUID(),
-    });
-
-    await updatePendingCount();
-
-    return id;
-  }, [updatePendingCount]);
+      return id;
+    },
+    [updatePendingCount]
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -107,9 +129,9 @@ export const useOfflineSync = () => {
     const setOnlineSafely = (value) => {
       if (!mounted) return;
 
-      setIsOnline((prev) => {
-        return prev === value ? prev : value;
-      });
+      setIsOnline((prev) =>
+        prev === value ? prev : value
+      );
     };
 
     const handleOnline = () => {
@@ -142,5 +164,6 @@ export const useOfflineSync = () => {
     syncing,
     saveOffline,
     syncPending,
+    getNextOfflineToken,
   };
 };
