@@ -160,7 +160,7 @@ const LeftSide = () => {
 
         <div>
           <p className="max-w-md text-lg font-medium leading-relaxed text-primary-foreground/90">
-            "Paper registers ko replace karo. Aaj se."
+            "Paper registers ko replace kara. Aaj se."
           </p>
         </div>
       </div>

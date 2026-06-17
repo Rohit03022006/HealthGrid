@@ -9,9 +9,8 @@ import {
 import { FiLogOut } from "react-icons/fi";
 
 import QueuePanel from "@/components/doctor/QueuePanel";
-import PatientHistory from "@/components/doctor/PatientHistory";
 import PrescriptionForm from "@/components/doctor/PrescriptionForm";
-
+import PatientHistory from "@/components/doctor/PatientHistory";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SyncStatusBadge from "@/components/common/SyncStatusBadge";
@@ -108,7 +107,7 @@ const DoctorPage = () => {
           <div className="space-y-6">
             {!activeToken && (
               <Card className="border-dashed shadow-none">
-                <CardContent className="flex min-h-80 items-center justify-center p-6 sm:min-h-105">
+                <CardContent className="flex min-h-80 items-center justify-center p-6 sm:min-h-[420px]">
                   <div className="max-w-sm text-center">
                     <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
                       <FaStethoscope className="text-2xl text-muted-foreground" />
@@ -129,7 +128,13 @@ const DoctorPage = () => {
 
             {activeToken && (
               <>
-                <PatientHistory patientId={activeToken.patient_id} />
+                <PatientHistory
+                  patientId={
+                    activeToken.patient_id ||
+                    activeToken.patientId ||
+                    activeToken.patient?.id
+                  }
+                />
 
                 <PrescriptionForm
                   token={activeToken}

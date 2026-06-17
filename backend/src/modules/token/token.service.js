@@ -55,7 +55,7 @@ export const assignTokenService = async (
     const tokenDisplay = generateTokenDisplay(nextNumber);
     const priority = getPriority(reason);
 
-    // Token insert karo
+    // Token insert kara
     const { rows } = await client.query(
       `INSERT INTO tokens
      (patient_id, doctor_id, token_number, token_display,   

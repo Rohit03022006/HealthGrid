@@ -31,7 +31,7 @@ api.interceptors.response.use(
     const status = error.response?.status;
 
     // Network error (server unreachable / offline)
-    // Logout mat karo
+    // Logout mat kara
     if (!error.response) {
       return Promise.reject({
         message: "Network error",
@@ -39,7 +39,7 @@ api.interceptors.response.use(
       });
     }
 
-    // Sirf genuine 401 pe logout karo
+    // Sirf genuine 401 pe logout kara
     // Offline case already upar handle ho chuka hai
     if (status === 401 && navigator.onLine) {
       logout();

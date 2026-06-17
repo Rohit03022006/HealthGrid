@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // App load pe user verify karo
+  // App load pe user verify kara
   useEffect(() => {
     const verify = async () => {
       const token = getToken();

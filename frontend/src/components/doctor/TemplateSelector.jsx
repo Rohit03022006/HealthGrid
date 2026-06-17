@@ -20,7 +20,7 @@ const TemplateSelector = ({ templates, onLoad, onRefresh }) => {
         advice,
       });
       setNewName("");
-      onRefresh(); // Parent se templates reload karo
+      onRefresh(); // Parent se templates reload kara
     } catch (err) {
       console.error("Template save failed:", err.message);
     } finally {

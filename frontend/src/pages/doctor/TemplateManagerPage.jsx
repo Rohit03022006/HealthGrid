@@ -1,328 +1,150 @@
-import { useState, useEffect } from "react";
-
-import {
-  getTemplatesAPI,
-  createTemplateAPI,
-  updateTemplateAPI,
-  deleteTemplateAPI,
-} from "@/services/templateService";
-
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { FiPlus, FiHome, FiFileText } from "react-icons/fi";
+import {
+  FaStethoscope,
+  FaUsers,
+  FaUserMd,
+  FaFileMedical,
+} from "react-icons/fa";
+import { FiLogOut } from "react-icons/fi";
 
-import { Button } from "@/components/ui/button";
+import QueuePanel from "@/components/doctor/QueuePanel";
+import PrescriptionForm from "@/components/doctor/PrescriptionForm";
+
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-import TemplateFormDialog from "@/components/templates/TemplateFormDialog";
-import TemplateCard from "@/components/templates/TemplateCard";
 import SyncStatusBadge from "@/components/common/SyncStatusBadge";
 
-const createEmptyMedicine = () => ({
-  name: "",
-  dosage: "",
-  frequency: "1-0-1",
-  duration: "",
-  instructions: "",
-});
-
-const createEmptyForm = () => ({
-  name: "",
-  medicines: [createEmptyMedicine()],
-  advice: "",
-});
-
-const TemplateManagerPage = () => {
+const DoctorPage = () => {
   const navigate = useNavigate();
-  const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(null);
 
-  const [editingTemplate, setEditingTemplate] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [activeToken, setActiveToken] = useState(null);
+  const [completed, setCompleted] = useState(false);
 
-  const [form, setForm] = useState(createEmptyForm);
-  const [errors, setErrors] = useState({});
-
-  const fetchTemplates = async () => {
-    setLoading(true);
-
-    try {
-      const res = await getTemplatesAPI();
-      setTemplates(res.data || []);
-    } catch {
-      setTemplates([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleCallPatient = (token) => {
+    setActiveToken(token);
+    setCompleted(false);
   };
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchTemplates();
-  }, []);
-
-  const handleCreate = () => {
-    setEditingTemplate(null);
-    setForm(createEmptyForm());
-    setErrors({});
-    setShowForm(true);
+  const handlePrescriptionDone = () => {
+    setActiveToken(null);
+    setCompleted(true);
   };
 
-  const handleEdit = (template) => {
-    setEditingTemplate(template);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-    setForm({
-      name: template.name || "",
-      medicines:
-        template.medicines?.length > 0
-          ? template.medicines.map((medicine) => ({ ...medicine }))
-          : [createEmptyMedicine()],
-      advice: template.advice || "",
-    });
-
-    setErrors({});
-    setShowForm(true);
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setEditingTemplate(null);
-    setForm(createEmptyForm());
-    setErrors({});
-  };
-
-  const handleNameChange = (value) => {
-    setForm((prev) => ({
-      ...prev,
-      name: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      name: "",
-    }));
-  };
-
-  const handleAdviceChange = (value) => {
-    setForm((prev) => ({
-      ...prev,
-      advice: value,
-    }));
-  };
-
-  const handleMedicineChange = (index, field, value) => {
-    setForm((prev) => {
-      const updatedMedicines = [...prev.medicines];
-
-      updatedMedicines[index] = {
-        ...updatedMedicines[index],
-        [field]: value,
-      };
-
-      return {
-        ...prev,
-        medicines: updatedMedicines,
-      };
-    });
-
-    setErrors((prev) => ({
-      ...prev,
-      [`med_${index}_${field}`]: "",
-    }));
-  };
-
-  const addMedicine = () => {
-    setForm((prev) => ({
-      ...prev,
-      medicines: [...prev.medicines, createEmptyMedicine()],
-    }));
-  };
-
-  const removeMedicine = (index) => {
-    if (form.medicines.length === 1) return;
-
-    setForm((prev) => ({
-      ...prev,
-      medicines: prev.medicines.filter((_, i) => i !== index),
-    }));
-  };
-
-  const validate = () => {
-    const newErrors = {};
-
-    if (!form.name.trim()) {
-      newErrors.name = "Template name required";
-    }
-
-    form.medicines.forEach((med, index) => {
-      if (!med.name.trim()) {
-        newErrors[`med_${index}_name`] = "Medicine name required";
-      }
-
-      if (!med.duration.trim()) {
-        newErrors[`med_${index}_duration`] = "Duration required";
-      }
-    });
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-
-    if (!validate()) return;
-
-    setSaving(true);
-
-    const payload = {
-      name: form.name.trim(),
-      medicines: form.medicines.map((med) => ({
-        name: med.name.trim(),
-        dosage: med.dosage.trim(),
-        frequency: med.frequency,
-        duration: med.duration.trim(),
-        instructions: med.instructions.trim(),
-      })),
-      advice: form.advice.trim() || undefined,
-    };
-
-    try {
-      if (editingTemplate) {
-        await updateTemplateAPI(editingTemplate.id, payload);
-      } else {
-        await createTemplateAPI(payload);
-      }
-
-      await fetchTemplates();
-      handleCancel();
-    } catch (err) {
-      if (err?.message?.includes("already exists")) {
-        setErrors({
-          name: "Template name already exists",
-        });
-      } else {
-        setErrors({
-          submit: err?.message || "Failed to save template",
-        });
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async (templateId) => {
-    if (!window.confirm("Delete this template?")) return;
-
-    setDeleting(templateId);
-
-    try {
-      await deleteTemplateAPI(templateId);
-
-      setTemplates((prev) =>
-        prev.filter((template) => template.id !== templateId),
-      );
-    } catch (err) {
-      console.error("Delete failed:", err.message);
-    } finally {
-      setDeleting(null);
-    }
+    navigate("/login", { replace: true });
   };
 
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight sm:text-3xl">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-                <FiFileText className="text-primary" />
+                <FaUserMd className="text-primary" />
               </span>
-              My Templates
+              Doctor Dashboard
             </h1>
 
             <p className="mt-1 text-muted-foreground">
-              Manage prescription templates
+              Call patients, view history, write prescriptions, and generate
+              PDF.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <SyncStatusBadge />
 
             <Button
               variant="outline"
               className="h-11 gap-2"
-              onClick={() => navigate("/doctor")}
+              onClick={() => navigate("/doctor/templates")}
             >
-              <FiHome className="h-4 w-4" />
-              Home
+              <FaFileMedical className="h-4 w-4" />
+              Manage Templates
             </Button>
 
-            <Button className="h-11 gap-2" onClick={handleCreate}>
-              <FiPlus className="h-4 w-4" />
-              New Template
+            <Button
+              variant="destructive"
+              className="h-11 gap-2"
+              onClick={handleLogout}
+            >
+              <FiLogOut className="h-4 w-4" />
+              Logout
             </Button>
           </div>
         </div>
 
-        {/* Create / Edit Dialog */}
-        <TemplateFormDialog
-          open={showForm}
-          form={form}
-          errors={errors}
-          saving={saving}
-          editingTemplate={editingTemplate}
-          onCancel={handleCancel}
-          onSave={handleSave}
-          onNameChange={handleNameChange}
-          onAdviceChange={handleAdviceChange}
-          onMedicineChange={handleMedicineChange}
-          onAddMedicine={addMedicine}
-          onRemoveMedicine={removeMedicine}
-        />
-
-        {/* Templates List */}
-        {loading ? (
-          <Card>
-            <CardContent className="py-10 text-center">
-              <p className="text-muted-foreground">Loading templates...</p>
+        {/* Success Message */}
+        {completed && (
+          <Card className="border-primary/20 bg-primary/5 shadow-none">
+            <CardContent className="flex flex-col gap-2 p-4 text-sm text-primary sm:flex-row sm:items-center">
+              <FaFileMedical className="shrink-0" />
+              <span>
+                Prescription saved successfully. Select next patient from queue.
+              </span>
             </CardContent>
           </Card>
-        ) : templates.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <h3 className="text-lg font-semibold">No templates yet</h3>
-
-              <p className="mt-2 text-muted-foreground">
-                Create your first prescription template.
-              </p>
-
-              <Button className="mt-4" onClick={handleCreate}>
-                <FiPlus className="mr-2 h-4 w-4" />
-                Create Template
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {templates.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                deleting={deleting === template.id}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
         )}
+
+        {/* Main Layout */}
+        <div className="grid gap-6 lg:grid-cols-[390px_1fr]">
+          {/* Queue */}
+          <Card className="shadow-sm">
+            <CardContent className="p-4 sm:p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <FaUsers className="text-primary" />
+                <h2 className="font-semibold">Patient Queue</h2>
+              </div>
+
+              <QueuePanel
+                activeTokenId={activeToken?.id}
+                onCallPatient={handleCallPatient}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Right Content */}
+          <div className="space-y-6">
+            {!activeToken && (
+              <Card className="border-dashed shadow-none">
+                <CardContent className="flex min-h-80 items-center justify-center p-6 sm:min-h-[420px]">
+                  <div className="max-w-sm text-center">
+                    <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                      <FaStethoscope className="text-2xl text-muted-foreground" />
+                    </span>
+
+                    <h2 className="text-xl font-semibold">
+                      Select a patient from queue
+                    </h2>
+
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Call a waiting patient to view history and create
+                      prescription.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeToken && (
+              <PrescriptionForm
+                token={activeToken}
+                onDone={handlePrescriptionDone}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );
 };
 
-export default TemplateManagerPage;
+export default DoctorPage;

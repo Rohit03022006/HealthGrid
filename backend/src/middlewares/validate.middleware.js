@@ -117,7 +117,7 @@ export const validate = (schemaName) => {
       });
     }
 
-    // Parsed + cleaned data replace karo
+    // Parsed + cleaned data replace kara
     req.body = result.data;
     next();
   };
